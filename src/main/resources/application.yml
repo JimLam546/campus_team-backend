@@ -2,7 +2,7 @@ server:
   port: 8080
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/partner_match?useSSL=true&serverTimezone=GMT
+    url: jdbc:mysql://localhost:3306/partner_match?useSSL=true&serverTimezone=GMT%2B8
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password: 123456
@@ -13,9 +13,6 @@ spring:
   session:
     timeout: 3600 # session 过期时间（秒）
     store-type: redis
-  servlet:
-    multipart:
-      max-file-size: 5MB
 mybatis-plus:
   mapper-locations: classpath:mapper/**/*.xml
   configuration:
@@ -29,7 +26,7 @@ mybatis-plus:
 knife4j:
   enable: true
   openapi:
-    title: 伙伴匹配系统接口文档
+    title: 校园组队系统接口文档
     description: 接口文档
     email: chen@foxmail.com
     concat: 123

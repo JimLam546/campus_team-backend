@@ -1,33 +1,33 @@
-package com.jim.Partner_Match.service.impl;
+package com.jim.Campus_Team.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.jim.Partner_Match.entity.domain.Team;
-import com.jim.Partner_Match.entity.domain.User;
-import com.jim.Partner_Match.entity.domain.UserTeam;
-import com.jim.Partner_Match.entity.enums.TeamStatusEnum;
-import com.jim.Partner_Match.entity.request.*;
-import com.jim.Partner_Match.entity.vo.TeamUserVO;
-import com.jim.Partner_Match.entity.vo.UserVO;
-import com.jim.Partner_Match.exception.BusinessException;
-import com.jim.Partner_Match.mapper.TeamMapper;
-import com.jim.Partner_Match.service.TeamService;
-import com.jim.Partner_Match.service.UserService;
-import com.jim.Partner_Match.service.UserTeamService;
+import com.jim.Campus_Team.entity.domain.Team;
+import com.jim.Campus_Team.entity.domain.User;
+import com.jim.Campus_Team.entity.domain.UserTeam;
+import com.jim.Campus_Team.entity.enums.TeamStatusEnum;
+import com.jim.Campus_Team.entity.request.*;
+import com.jim.Campus_Team.entity.vo.TeamUserVO;
+import com.jim.Campus_Team.entity.vo.UserVO;
+import com.jim.Campus_Team.exception.BusinessException;
+import com.jim.Campus_Team.mapper.TeamMapper;
+import com.jim.Campus_Team.service.TeamService;
+import com.jim.Campus_Team.service.UserService;
+import com.jim.Campus_Team.service.UserTeamService;
 import org.apache.commons.lang3.StringUtils;
-import org.redisson.Redisson;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import static com.jim.Partner_Match.common.ErrorCode.*;
+import static com.jim.Campus_Team.common.ErrorCode.*;
 
 /**
  * @author Jim_Lam
@@ -321,6 +321,17 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         return this.removeById(teamId);
 
     }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public String uploadAvatar(MultipartFile file, User loginUser, long teamId) {
+        Team team = getTeamById(teamId);
+        if(!loginUser.getId().equals(team.getUserId())) {
+            throw new BusinessException(NO_AUTO);
+        }
+        return userService.uploadAvatar(file, loginUser, "teamAvatar");
+    }
+
 
     private Team getTeamById(Long teamId) {
         if (teamId == null || teamId <= 0)

@@ -1,32 +1,35 @@
-package com.jim.Partner_Match.controller;
+package com.jim.Campus_Team.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.jim.Partner_Match.common.BaseResponse;
-import com.jim.Partner_Match.common.ResultUtil;
-import com.jim.Partner_Match.entity.domain.Team;
-import com.jim.Partner_Match.entity.domain.User;
-import com.jim.Partner_Match.entity.domain.UserTeam;
-import com.jim.Partner_Match.entity.request.*;
-import com.jim.Partner_Match.entity.vo.TeamUserVO;
-import com.jim.Partner_Match.entity.vo.UserVO;
-import com.jim.Partner_Match.exception.BusinessException;
-import com.jim.Partner_Match.service.TeamService;
-import com.jim.Partner_Match.service.UserService;
-import com.jim.Partner_Match.service.UserTeamService;
+import com.jim.Campus_Team.common.BaseResponse;
+import com.jim.Campus_Team.common.ResultUtil;
+import com.jim.Campus_Team.entity.domain.Team;
+import com.jim.Campus_Team.entity.domain.User;
+import com.jim.Campus_Team.entity.domain.UserTeam;
+import com.jim.Campus_Team.entity.request.*;
+import com.jim.Campus_Team.entity.vo.TeamUserVO;
+import com.jim.Campus_Team.entity.vo.UserVO;
+import com.jim.Campus_Team.exception.BusinessException;
+import com.jim.Campus_Team.service.TeamService;
+import com.jim.Campus_Team.service.UserService;
+import com.jim.Campus_Team.service.UserTeamService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.jim.Partner_Match.common.ErrorCode.*;
-import static com.jim.Partner_Match.contant.UserConstant.USER_LOGIN_STATE;
+import static com.jim.Campus_Team.common.ErrorCode.*;
+import static com.jim.Campus_Team.contant.UserConstant.USER_LOGIN_STATE;
 
 @RestController
 @RequestMapping("/team")
@@ -54,13 +57,21 @@ public class TeamController {
     }
 
     @GetMapping("/get")
-    public BaseResponse<Team> getTeamById(long id) {
+    public BaseResponse<TeamUserVO> getTeamById(long id) {
         if(id <= 0)
             throw new BusinessException(PARAMETER_ERROR);
         Team team = teamService.getById(id);
-        if(team == null)
-            throw new BusinessException(PARAMETER_ERROR, "该队伍不存在");
-        return ResultUtil.success(team);
+        User createUser = userService.getById(team.getUserId());
+        TeamUserVO teamUserVO = BeanUtil.copyProperties(team, TeamUserVO.class, "expireTime");
+        teamUserVO.setExpireTime(userService.setTimeFormat(team.getExpireTime()));
+        teamUserVO.setCreateUser(BeanUtil.copyProperties(createUser, UserVO.class));
+        // 加入队伍的用户
+        List<UserTeam> teamId = userTeamService.query().eq("teamId", team.getId()).list();
+        List<Long> userIdList = teamId.stream().map(UserTeam::getUserId).collect(Collectors.toList());
+        List<User> userList = userService.query().in("id", userIdList).list();
+        List<UserVO> userVOList = userList.stream().map(user -> BeanUtil.copyProperties(user, UserVO.class)).collect(Collectors.toList());
+        teamUserVO.setTeamUserList(userVOList);
+        return ResultUtil.success(teamUserVO);
     }
 
 
@@ -173,5 +184,22 @@ public class TeamController {
             return teamUserVO;
         }).collect(Collectors.toList());
         return ResultUtil.success(teamUserVOs);
+    }
+
+    @PostMapping("/uploadAvatar")
+    public BaseResponse<Boolean> uploadAvatar(@RequestParam("file") MultipartFile file, HttpServletRequest request, long teamId) {
+        if(file.isEmpty()) {
+            throw new BusinessException(PARAMETER_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        // 验证是否登录
+        if(loginUser == null) {
+            throw new BusinessException(NOT_LOGIN);
+        }
+        String uploadURL = teamService.uploadAvatar(file, loginUser, teamId);
+        boolean result = teamService.update().set("avatarURL", uploadURL).eq("id", teamId).update();
+        if(!result)
+            throw new BusinessException(SYSTEM_ERROR);
+        return ResultUtil.success(true);
     }
 }

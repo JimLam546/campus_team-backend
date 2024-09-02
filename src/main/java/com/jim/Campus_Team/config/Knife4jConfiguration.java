@@ -1,4 +1,4 @@
-package com.jim.Partner_Match.config;
+package com.jim.Campus_Team.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,7 +27,7 @@ public class Knife4jConfiguration {
                 .groupName("2.X版本")
                 .select()
                 //这里指定Controller扫描包路径
-                .apis(RequestHandlerSelectors.basePackage("com.jim.Partner_Match.controller"))
+                .apis(RequestHandlerSelectors.basePackage("com.jim.Campus_Team.controller"))
                 .paths(PathSelectors.any())
                 .build();
         return docket;

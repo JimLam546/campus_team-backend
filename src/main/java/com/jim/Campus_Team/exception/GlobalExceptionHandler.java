@@ -1,8 +1,8 @@
-package com.jim.Partner_Match.exception;
+package com.jim.Campus_Team.exception;
 
-import com.jim.Partner_Match.common.BaseResponse;
-import com.jim.Partner_Match.common.ErrorCode;
-import com.jim.Partner_Match.common.ResultUtil;
+import com.jim.Campus_Team.common.BaseResponse;
+import com.jim.Campus_Team.common.ErrorCode;
+import com.jim.Campus_Team.common.ResultUtil;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 

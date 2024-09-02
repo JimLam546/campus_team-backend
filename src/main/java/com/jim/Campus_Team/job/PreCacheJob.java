@@ -1,9 +1,9 @@
-package com.jim.Partner_Match.job;
+package com.jim.Campus_Team.job;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.jim.Partner_Match.entity.domain.User;
-import com.jim.Partner_Match.service.UserService;
+import com.jim.Campus_Team.entity.domain.User;
+import com.jim.Campus_Team.service.UserService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -43,7 +43,6 @@ public class PreCacheJob {
         try {
             valueOperations.set(redisKey, userPage, 24, TimeUnit.HOURS);
         } catch (Exception e) {
-            // log.error("redis set key error", e);
             e.printStackTrace();
         }
     }

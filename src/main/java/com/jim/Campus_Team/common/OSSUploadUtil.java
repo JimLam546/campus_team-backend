@@ -1,7 +1,5 @@
-package com.jim.Partner_Match.common;
+package com.jim.Campus_Team.common;
 
-import cn.hutool.core.lang.UUID;
-import cn.hutool.core.util.RandomUtil;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.internal.OSSHeaders;
@@ -65,10 +63,10 @@ public class OSSUploadUtil {
 
     private static String avatar(long userId, MultipartFile file, String type) {
         String id = String.valueOf(userId);
-        String fileName =  id + "--" + type + "--" + file.getOriginalFilename();
+        String fileName =  id + "--" + "--" + file.getOriginalFilename();
         Date date = new Date();
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM");
         String yearMonth = format.format(date);
-        return "avatar/" + yearMonth + "/" + fileName;
+        return "avatar/" + type + "/" + yearMonth + "/" + fileName;
     }
 }

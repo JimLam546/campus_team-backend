@@ -1,4 +1,4 @@
-package com.jim.Partner_Match.config;
+package com.jim.Campus_Team.config;
 
 import lombok.Data;
 import org.redisson.Redisson;

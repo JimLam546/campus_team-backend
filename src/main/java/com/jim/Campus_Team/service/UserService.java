@@ -1,14 +1,13 @@
-package com.jim.Partner_Match.service;
+package com.jim.Campus_Team.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.jim.Partner_Match.common.BaseResponse;
-import com.jim.Partner_Match.entity.domain.User;
-import com.jim.Partner_Match.entity.request.UpdateTagRequest;
-import com.jim.Partner_Match.entity.vo.UserVO;
+import com.jim.Campus_Team.common.BaseResponse;
+import com.jim.Campus_Team.entity.domain.User;
+import com.jim.Campus_Team.entity.request.UpdateTagRequest;
+import com.jim.Campus_Team.entity.vo.UserVO;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -21,7 +20,7 @@ public interface UserService extends IService<User> {
     BaseResponse<Long> userRegister(String userAccount, String username, String userPassword, String checkPassword);
     public BaseResponse<User> doLogin(String userAccount, String userPassword, HttpServletRequest request);
     public void userLough(HttpServletRequest request);
-    public List<User> searchUsersByTags(List<String> tagList);
+    public List<User> searchUsersByTags(long pageNum, long pageSize, List<String> tagList);
     User getLoginUser(HttpServletRequest request);
     boolean isAdmin(HttpServletRequest request);
     boolean isAdmin(User loginUser);
@@ -34,5 +33,5 @@ public interface UserService extends IService<User> {
 
     boolean modifyTags(UpdateTagRequest tagList, User loginUser);
 
-    boolean uploadAvatar(MultipartFile file, User loginUser);
+    String uploadAvatar(MultipartFile file, User loginUser, String avatarType);
 }

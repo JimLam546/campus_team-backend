@@ -1,4 +1,4 @@
-package com.jim.Partner_Match.common;
+package com.jim.Campus_Team.common;
 
 import lombok.Data;
 

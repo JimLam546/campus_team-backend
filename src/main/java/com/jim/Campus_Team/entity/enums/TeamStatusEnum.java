@@ -1,4 +1,4 @@
-package com.jim.Partner_Match.entity.enums;
+package com.jim.Campus_Team.entity.enums;
 
 /**
  * 队伍状态枚举

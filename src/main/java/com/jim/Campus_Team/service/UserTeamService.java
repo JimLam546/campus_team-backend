@@ -1,6 +1,6 @@
-package com.jim.Partner_Match.service;
+package com.jim.Campus_Team.service;
 
-import com.jim.Partner_Match.entity.domain.UserTeam;
+import com.jim.Campus_Team.entity.domain.UserTeam;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**

@@ -1,16 +1,17 @@
-package com.jim.Partner_Match;
+package com.jim.Campus_Team;
 
-import com.jim.Partner_Match.entity.domain.User;
-import com.jim.Partner_Match.service.UserService;
+import com.jim.Campus_Team.entity.domain.Team;
+import com.jim.Campus_Team.entity.domain.User;
+import com.jim.Campus_Team.service.TeamService;
+import com.jim.Campus_Team.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.StopWatch;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @SpringBootTest
 class UserCenterApplicationTests {
@@ -21,11 +22,22 @@ class UserCenterApplicationTests {
     @Resource
     private StringRedisTemplate stringRedisTemplate;
 
+    @Resource
+    private TeamService teamService;
+
+    @Test
+    public void testDate() {
+        Team team = teamService.getById(9);
+        Date expireTime = team.getExpireTime();
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        System.out.println(format.format(expireTime));
+    }
+
     @Test
     void contextLoads() {
         List<String> tags = Arrays.asList("java", "python");
-        List<User> userList = userService.searchUsersByTags(tags);
-        System.out.println(userList);
+        // List<User> userList = userService.searchUsersByTags(tags);
+        // System.out.println(userList);
     }
 
 

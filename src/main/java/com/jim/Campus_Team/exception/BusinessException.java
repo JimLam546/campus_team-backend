@@ -1,6 +1,6 @@
-package com.jim.Partner_Match.exception;
+package com.jim.Campus_Team.exception;
 
-import com.jim.Partner_Match.common.ErrorCode;
+import com.jim.Campus_Team.common.ErrorCode;
 
 public class BusinessException extends RuntimeException{
     private final int code;

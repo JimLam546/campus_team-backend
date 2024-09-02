@@ -3,10 +3,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.Jim</groupId>
-    <artifactId>Partner_Match_backEnd</artifactId>
+    <artifactId>campus_team-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>Partner_Match</name>
-    <description>Partner_Match</description>
+    <name>Campus_Team</name>
+    <description>Campus_Team</description>
     <properties>
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -150,7 +150,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring-boot.version}</version>
                 <configuration>
-                    <mainClass>com.jim.Partner_Match.UserCenterApplication</mainClass>
+                    <mainClass>com.jim.Campus_Team.UserCenterApplication</mainClass>
                     <skip>true</skip>
                 </configuration>
                 <executions>

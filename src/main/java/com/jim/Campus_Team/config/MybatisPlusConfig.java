@@ -1,4 +1,4 @@
-package com.jim.Partner_Match.config;
+package com.jim.Campus_Team.config;
 
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@MapperScan("com.jim.Partner_Match.mapper")
+@MapperScan("com.jim.Campus_Team.mapper")
 public class MybatisPlusConfig {
 
     /**

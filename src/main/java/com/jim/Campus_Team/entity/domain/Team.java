@@ -1,4 +1,4 @@
-package com.jim.Partner_Match.entity.domain;
+package com.jim.Campus_Team.entity.domain;
 
 import com.baomidou.mybatisplus.annotation.*;
 
@@ -38,6 +38,8 @@ public class Team implements Serializable {
      * 过期时间
      */
     private Date expireTime;
+    @TableField(exist = false)
+    private String strExpireTime;
 
     /**
      * 队伍创建人

@@ -1,10 +1,11 @@
-package com.jim.Partner_Match.service;
+package com.jim.Campus_Team.service;
 
-import com.jim.Partner_Match.entity.domain.Team;
+import com.jim.Campus_Team.entity.domain.Team;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.jim.Partner_Match.entity.domain.User;
-import com.jim.Partner_Match.entity.request.*;
-import com.jim.Partner_Match.entity.vo.TeamUserVO;
+import com.jim.Campus_Team.entity.domain.User;
+import com.jim.Campus_Team.entity.request.*;
+import com.jim.Campus_Team.entity.vo.TeamUserVO;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -26,4 +27,6 @@ public interface TeamService extends IService<Team> {
     boolean quitTeam(TeamQuitRequest teamQuitRequest, User loginUser);
 
     boolean deleteTeam(long teamId, User loginUser);
+
+    String uploadAvatar(MultipartFile file, User loginUser, long teamId);
 }

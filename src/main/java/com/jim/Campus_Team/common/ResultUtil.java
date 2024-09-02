@@ -1,4 +1,4 @@
-package com.jim.Partner_Match.common;
+package com.jim.Campus_Team.common;
 
 public class ResultUtil{
     public static <T> BaseResponse<T> success(T data) {

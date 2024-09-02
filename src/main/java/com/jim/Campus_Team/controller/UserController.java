@@ -1,20 +1,22 @@
-package com.jim.Partner_Match.controller;
+package com.jim.Campus_Team.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.jim.Partner_Match.common.BaseResponse;
-import com.jim.Partner_Match.common.ErrorCode;
-import com.jim.Partner_Match.common.ResultUtil;
-import com.jim.Partner_Match.entity.domain.User;
-import com.jim.Partner_Match.entity.domain.UserId;
-import com.jim.Partner_Match.entity.request.PageRequest;
-import com.jim.Partner_Match.entity.request.UpdateTagRequest;
-import com.jim.Partner_Match.entity.request.UserLoginRequest;
-import com.jim.Partner_Match.entity.request.UserRegisterRequest;
-import com.jim.Partner_Match.entity.vo.UserVO;
-import com.jim.Partner_Match.exception.BusinessException;
-import com.jim.Partner_Match.service.UserService;
+import com.jim.Campus_Team.common.BaseResponse;
+import com.jim.Campus_Team.common.ErrorCode;
+import com.jim.Campus_Team.common.ResultUtil;
+import com.jim.Campus_Team.entity.domain.User;
+import com.jim.Campus_Team.entity.domain.UserId;
+import com.jim.Campus_Team.entity.request.PageRequest;
+import com.jim.Campus_Team.entity.request.UpdateTagRequest;
+import com.jim.Campus_Team.entity.request.UserLoginRequest;
+import com.jim.Campus_Team.entity.request.UserRegisterRequest;
+import com.jim.Campus_Team.entity.vo.UserVO;
+import com.jim.Campus_Team.exception.BusinessException;
+import com.jim.Campus_Team.service.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,15 +28,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
-import static com.jim.Partner_Match.common.ErrorCode.*;
-import static com.jim.Partner_Match.contant.UserConstant.USER_LOGIN_STATE;
+import static com.jim.Campus_Team.common.ErrorCode.*;
+import static com.jim.Campus_Team.contant.UserConstant.USER_LOGIN_STATE;
 
 @CrossOrigin(origins = {"http://localhost:5173"}, allowCredentials = "true")
 @RestController
@@ -67,6 +68,20 @@ public class UserController {
             return null;
         }
         return userService.doLogin(userAccount, userPassword, request);
+    }
+
+    @GetMapping("/query")
+    public BaseResponse<List<UserVO>> query(String username, PageRequest pageRequest, HttpServletRequest request) {
+        System.out.println(username);
+        if(request.getSession().getAttribute(USER_LOGIN_STATE) == null)
+            throw new BusinessException(NOT_LOGIN);
+        Page<User> page = new Page<>(pageRequest.getPageNum(), pageRequest.getPageSize(), false);
+        List<User> userList = userService.query().like("username", username).list(page);
+        List<UserVO> userVOList = userList.stream()
+                        .map(user -> BeanUtil.copyProperties(user, UserVO.class))
+                .collect(Collectors.toList());
+        System.out.println(username);
+        return ResultUtil.success(userVOList);
     }
 
     @GetMapping("/search")
@@ -109,7 +124,7 @@ public class UserController {
             return ResultUtil.error(NOT_LOGIN);
         User safeUser = new User();
         BeanUtils.copyProperties(user, safeUser);
-        SimpleDateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        SimpleDateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         safeUser.setCreateTimeStr(timeFormat.format(user.getCreateTime()));
         safeUser.setUserPassword(null);
         safeUser.setIsDelete(null);
@@ -174,10 +189,10 @@ public class UserController {
     }
 
     @GetMapping("/search/list")
-    public BaseResponse<List<User>> searchUserByTags(@RequestParam(required = false) List<String> tagList) {
+    public BaseResponse<List<User>> searchUserByTags(long pageNum, long pageSize, @RequestParam(required = false) List<String> tagList) {
         if (CollectionUtils.isEmpty(tagList))
             throw new BusinessException(NULL_ERROR);
-        List<User> userList = userService.searchUsersByTags(tagList);
+        List<User> userList = userService.searchUsersByTags(pageNum, pageSize, tagList);
         return new BaseResponse<>(0, userList);
     }
 
@@ -201,25 +216,38 @@ public class UserController {
     private String temp_Id;
 
     @GetMapping("/recommend")
-    public BaseResponse<List<User>> recommendUsers(long pageSize, long pageNum, HttpServletRequest request) {
+    public BaseResponse<List<UserVO>> recommendUsers(long pageSize, long pageNum, HttpServletRequest request) {
         User loginUser = userService.getLoginUser(request);
         String redisKey = String.format("user:recommend:%s", temp_Id);
         ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
         // 如果有缓存，直接读缓存
-        Page<User> userPage = (Page<User>) valueOperations.get(redisKey);
-        if (userPage != null) {
-            return ResultUtil.success(userPage.getRecords());
+        // 防止重复，页数大于1就查数据库
+        Page<User> userPage = null;
+        if (pageNum > 1) {
+            userPage = (Page<User>) valueOperations.get(redisKey);
+            if (userPage != null) {
+                List<UserVO> userVOList = userPage.getRecords().stream().map(
+                                user -> BeanUtil.copyProperties(user, UserVO.class))
+                        .collect(Collectors.toList());
+                return ResultUtil.success(userVOList);
+            }
         }
         // 无缓存，查数据库
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         userPage = userService.page(new Page<>(pageNum, pageSize), queryWrapper);
         // 写缓存
         try {
-            valueOperations.set(redisKey, userPage, 30000, TimeUnit.MILLISECONDS);
+            Object o = valueOperations.get(redisKey);
+            if (o == null) {
+                valueOperations.set(redisKey, userPage, 30000, TimeUnit.MILLISECONDS);
+            }
         } catch (Exception e) {
             // log.error("redis set key error", e);
         }
-        return ResultUtil.success(userPage.getRecords());
+        List<UserVO> userVOList = userPage.getRecords().stream().map(
+                        user -> BeanUtil.copyProperties(user, UserVO.class))
+                .collect(Collectors.toList());
+        return ResultUtil.success(userVOList);
     }
 
     // 匹配模式(match)
@@ -258,10 +286,32 @@ public class UserController {
             throw new BusinessException(NOT_LOGIN);
         }
 
-        boolean result = userService.uploadAvatar(file, loginUser);
-        if(!result)
-            throw new BusinessException(SYSTEM_ERROR);
+        String uploadURL = userService.uploadAvatar(file, loginUser, "userAvatar");
+        boolean update = userService.update().set("avatarUrl", uploadURL).eq("id", loginUser.getId()).update();
+        if (!update) {
+            throw new BusinessException(SYSTEM_ERROR, "图片保存失败");
+        }
         return ResultUtil.success(true);
+    }
+
+    @GetMapping("/query/{id}")
+    public BaseResponse<UserVO> query(HttpServletRequest request, @PathVariable("id") long id) {
+        try {
+            Object attribute = request.getSession().getAttribute(USER_LOGIN_STATE);
+            if (attribute == null)
+                throw new RuntimeException();
+        } catch (Exception e) {
+            throw new BusinessException(NOT_LOGIN, "身份信息异常，请重新登录");
+        }
+        if (id < 1)
+            throw new BusinessException(PARAMETER_ERROR, "用户不存在");
+        User user = userService.getById(id);
+        System.out.println(user);
+        UserVO userVO = BeanUtil.copyProperties(user, UserVO.class);
+        SimpleDateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        userVO.setCreateTimeStr(timeFormat.format(user.getCreateTime()));
+        System.out.println(userVO);
+        return ResultUtil.success(userVO);
     }
 
     // @PostMapping("/avatar")

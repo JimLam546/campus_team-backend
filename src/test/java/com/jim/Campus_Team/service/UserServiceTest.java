@@ -1,4 +1,4 @@
-package com.jim.Partner_Match.service;
+package com.jim.Campus_Team.service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

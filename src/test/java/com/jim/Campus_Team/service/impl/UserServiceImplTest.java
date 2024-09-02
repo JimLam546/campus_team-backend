@@ -1,4 +1,4 @@
-package com.jim.Partner_Match.service.impl;
+package com.jim.Campus_Team.service.impl;
 
 import org.junit.jupiter.api.Test;
 

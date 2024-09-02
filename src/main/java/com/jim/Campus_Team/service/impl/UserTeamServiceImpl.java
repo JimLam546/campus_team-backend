@@ -1,9 +1,9 @@
-package com.jim.Partner_Match.service.impl;
+package com.jim.Campus_Team.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.jim.Partner_Match.entity.domain.UserTeam;
-import com.jim.Partner_Match.service.UserTeamService;
-import com.jim.Partner_Match.mapper.UserTeamMapper;
+import com.jim.Campus_Team.entity.domain.UserTeam;
+import com.jim.Campus_Team.service.UserTeamService;
+import com.jim.Campus_Team.mapper.UserTeamMapper;
 import org.springframework.stereotype.Service;
 
 /**

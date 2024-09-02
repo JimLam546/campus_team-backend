@@ -1,26 +1,25 @@
-package com.jim.Partner_Match.service.impl;
+package com.jim.Campus_Team.service.impl;
 
-import cn.hutool.core.io.FileTypeUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.jim.Partner_Match.common.AlgorithmUtil;
-import com.jim.Partner_Match.common.BaseResponse;
-import com.jim.Partner_Match.common.OSSUploadUtil;
-import com.jim.Partner_Match.common.ResultUtil;
-import com.jim.Partner_Match.entity.domain.User;
-import com.jim.Partner_Match.entity.request.UpdateTagRequest;
-import com.jim.Partner_Match.entity.vo.UserVO;
-import com.jim.Partner_Match.exception.BusinessException;
-import com.jim.Partner_Match.mapper.UserMapper;
-import com.jim.Partner_Match.service.UserService;
-import jodd.net.URLDecoder;
+import com.jim.Campus_Team.common.AlgorithmUtil;
+import com.jim.Campus_Team.common.BaseResponse;
+import com.jim.Campus_Team.common.OSSUploadUtil;
+import com.jim.Campus_Team.common.ResultUtil;
+import com.jim.Campus_Team.entity.domain.User;
+import com.jim.Campus_Team.entity.request.UpdateTagRequest;
+import com.jim.Campus_Team.entity.vo.UserVO;
+import com.jim.Campus_Team.exception.BusinessException;
+import com.jim.Campus_Team.mapper.UserMapper;
+import com.jim.Campus_Team.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.util.Pair;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
@@ -29,16 +28,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.io.File;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static com.jim.Partner_Match.common.ErrorCode.*;
-import static com.jim.Partner_Match.contant.UserConstant.USER_LOGIN_STATE;
+import static com.jim.Campus_Team.common.ErrorCode.*;
+import static com.jim.Campus_Team.contant.UserConstant.USER_LOGIN_STATE;
 
 /**
  * @author Jim_Lam
@@ -67,26 +64,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (userPassword.length() < 8)
             return ResultUtil.error(PARAMETER_ERROR);
 //        账户不能包含特殊字符
-        String regEx = "[`~!#$%^&*()+=|{}'Aa':;,\\\\[\\\\].<>/?~！@#￥%……&*（）9——+|{}【】\"‘；：”“’。，、？]";
-        Pattern p = Pattern.compile(regEx);
+        String regEx = "[`~!@#$%^&*()+=|{}':;',\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
         Matcher matcher = Pattern.compile(regEx).matcher(userAccount);
         if (matcher.find())
-            return ResultUtil.error(PARAMETER_ERROR);
+            return ResultUtil.error(PARAMETER_ERROR, "账户不能包含特殊字符");
         if (!userPassword.equals(checkPassword))
-            return ResultUtil.error(PARAMETER_ERROR);
+            return ResultUtil.error(PARAMETER_ERROR, "账号密码与密码不匹配");
 //        账户信息不能相同
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("userAccount", userAccount);
         Long count = userMapper.selectCount(queryWrapper);
         if (count > 0)
-            return ResultUtil.error(PARAMETER_ERROR);
+            return ResultUtil.error(PARAMETER_ERROR, "该账号已存在");
 //        加密
-//         String md5 = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
+        String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
         User user = new User();
         user.setUserAccount(userAccount);
         user.setUsername(username);
         // user.setUserPassword(md5);
-        user.setUserPassword(userPassword);
+        user.setUserPassword(encryptPassword);
         boolean save = this.save(user);
         if (!save)
             return new BaseResponse<>(40000, "用户信息存入数据库失败", (long) -1);
@@ -104,20 +100,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (userPassword.length() < 8)
             return ResultUtil.error(PARAMETER_ERROR);
 //        账户不能包含特殊字符
-        String regEx = "[`~!#$%^&*()+=|{}'Aa':;,\\\\[\\\\].<>/?~！@#￥%……&*（）9——+|{}【】\"‘；：”“’。，、？]";
+        String regEx = "[`~!@#$%^&*()+=|{}':;',\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
         // Pattern p = Pattern.compile(regEx);
         Matcher matcher = Pattern.compile(regEx).matcher(userAccount);
-        if (!matcher.find())
+        if (matcher.find())
             return ResultUtil.error(PARAMETER_ERROR);
 //        加密
-        String md5 = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
+        String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("userAccount", userAccount);
-        queryWrapper.eq("userPassword", userPassword);
+        queryWrapper.eq("userPassword", encryptPassword);
         User user = userMapper.selectOne(queryWrapper);
 //        用户不存在
         if (user == null) {
-            log.info("user login failed, userAccount cannot match userPassword!");
+            log.info("用户登录失败, 账号密码不匹配!");
             return ResultUtil.error(PARAMETER_ERROR);
         }
         // 用户信息脱敏
@@ -151,24 +147,31 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     @Override
-    public List<User> searchUsersByTags(List<String> tagList) {
+    public List<User> searchUsersByTags(long pageNum, long pageSize, List<String> tagList) {
         if (tagList.isEmpty()) {
             throw new BusinessException(PARAMETER_ERROR);
         }
         // 通过内容查询标签用户
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        List<User> userList = userMapper.selectList(queryWrapper);
-        return userList.stream().filter(user -> {
-            Gson gson = new Gson();
-            Set<String> set = gson.fromJson(user.getTags(), new TypeToken<Set<String>>() {
-            }.getType());
-            set = Optional.ofNullable(set).orElse(new HashSet<>());
-            for (String tag : tagList) {
-                if (!set.contains(tag))
-                    return false;
-            }
-            return true;
-        }).map(this::getSafeUser).collect(Collectors.toList());
+        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        for (String tag : tagList) {
+            userLambdaQueryWrapper = userLambdaQueryWrapper.or().like(StringUtils.isNotEmpty(tag), User::getTags, tag);
+        }
+        return page(new Page<>(pageNum, pageSize), userLambdaQueryWrapper).getRecords();
+
+        // // 全部取出过滤指定标签的方式
+        // QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        // List<User> userList = userMapper.selectList(queryWrapper);
+        // return userList.stream().filter(user -> {
+        //     Gson gson = new Gson();
+        //     Set<String> set = gson.fromJson(user.getTags(), new TypeToken<Set<String>>() {
+        //     }.getType());
+        //     set = Optional.ofNullable(set).orElse(new HashSet<>());
+        //     for (String tag : tagList) {
+        //         if (!set.contains(tag))
+        //             return false;
+        //     }
+        //     return true;
+        // }).map(this::getSafeUser).collect(Collectors.toList());
     }
 
     @Override
@@ -206,7 +209,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Override
     public String setTimeFormat(Date date) {
-        SimpleDateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        SimpleDateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         return timeFormat.format(date);
     }
 
@@ -278,7 +281,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * @param loginUser
      * @return
      */
-    public boolean uploadAvatar(MultipartFile avatar, User loginUser) {
+    public String uploadAvatar(MultipartFile avatar, User loginUser, String avatarType) {
         if (loginUser == null)
             throw new BusinessException(NOT_LOGIN);
         if (avatar.isEmpty())
@@ -293,12 +296,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
 
         // 第三个参数表示上传的图片是队伍的还是用户的
-        String uploadURL = OSSUploadUtil.upload(avatar, loginUser.getId(), "avatar");
-        boolean update = this.update().set("avatarUrl", uploadURL).eq("id", loginUser.getId()).update();
-        if (!update) {
-            throw new BusinessException(SYSTEM_ERROR, "图片保存失败");
-        }
-        return true;
+        return OSSUploadUtil.upload(avatar, loginUser.getId(), avatarType);
+
     }
 
     // 上传本地

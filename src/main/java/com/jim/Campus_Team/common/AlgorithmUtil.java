@@ -1,4 +1,4 @@
-package com.jim.Partner_Match.common;
+package com.jim.Campus_Team.common;
 
 import java.util.List;
 import java.util.Objects;
