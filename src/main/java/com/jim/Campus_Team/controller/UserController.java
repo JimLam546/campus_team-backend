@@ -73,12 +73,12 @@ public class UserController {
     @GetMapping("/query")
     public BaseResponse<List<UserVO>> query(String username, PageRequest pageRequest, HttpServletRequest request) {
         System.out.println(username);
-        if(request.getSession().getAttribute(USER_LOGIN_STATE) == null)
+        if (request.getSession().getAttribute(USER_LOGIN_STATE) == null)
             throw new BusinessException(NOT_LOGIN);
         Page<User> page = new Page<>(pageRequest.getPageNum(), pageRequest.getPageSize(), false);
         List<User> userList = userService.query().like("username", username).list(page);
         List<UserVO> userVOList = userList.stream()
-                        .map(user -> BeanUtil.copyProperties(user, UserVO.class))
+                .map(user -> BeanUtil.copyProperties(user, UserVO.class))
                 .collect(Collectors.toList());
         System.out.println(username);
         return ResultUtil.success(userVOList);
@@ -212,7 +212,7 @@ public class UserController {
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
 
-    @Value("userId")
+    @Value("${RedisKey.temp_Id}")
     private String temp_Id;
 
     @GetMapping("/recommend")
@@ -221,16 +221,13 @@ public class UserController {
         String redisKey = String.format("user:recommend:%s", temp_Id);
         ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
         // 如果有缓存，直接读缓存
-        // 防止重复，页数大于1就查数据库
         Page<User> userPage = null;
-        if (pageNum > 1) {
-            userPage = (Page<User>) valueOperations.get(redisKey);
-            if (userPage != null) {
-                List<UserVO> userVOList = userPage.getRecords().stream().map(
-                                user -> BeanUtil.copyProperties(user, UserVO.class))
-                        .collect(Collectors.toList());
-                return ResultUtil.success(userVOList);
-            }
+        userPage = (Page<User>) valueOperations.get(redisKey);
+        if (userPage != null) {
+            List<UserVO> userVOList = userPage.getRecords().stream().map(
+                            user -> BeanUtil.copyProperties(user, UserVO.class))
+                    .collect(Collectors.toList());
+            return ResultUtil.success(userVOList);
         }
         // 无缓存，查数据库
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
@@ -239,7 +236,7 @@ public class UserController {
         try {
             Object o = valueOperations.get(redisKey);
             if (o == null) {
-                valueOperations.set(redisKey, userPage, 30000, TimeUnit.MILLISECONDS);
+                valueOperations.set(redisKey, userPage, 24, TimeUnit.HOURS);
             }
         } catch (Exception e) {
             // log.error("redis set key error", e);
@@ -264,25 +261,25 @@ public class UserController {
 
     @PostMapping("/modifyTags")
     public BaseResponse<Boolean> modifyTags(@RequestBody UpdateTagRequest updateTagRequest, HttpServletRequest request) {
-        if(updateTagRequest == null)
+        if (updateTagRequest == null)
             throw new BusinessException(PARAMETER_ERROR);
-        if(CollectionUtils.isEmpty(updateTagRequest.getTagList()))
+        if (CollectionUtils.isEmpty(updateTagRequest.getTagList()))
             throw new BusinessException(NULL_ERROR);
         User loginUser = userService.getLoginUser(request);
         boolean result = userService.modifyTags(updateTagRequest, loginUser);
-        if(!result)
+        if (!result)
             throw new BusinessException(SYSTEM_ERROR);
         return ResultUtil.success(true);
     }
 
     @PostMapping("/uploadAvatar")
     public BaseResponse<Boolean> uploadAvatar(@RequestParam("file") MultipartFile file, HttpServletRequest request) {
-        if(file.isEmpty()) {
+        if (file.isEmpty()) {
             throw new BusinessException(PARAMETER_ERROR);
         }
         User loginUser = userService.getLoginUser(request);
         // 验证是否登录
-        if(loginUser == null) {
+        if (loginUser == null) {
             throw new BusinessException(NOT_LOGIN);
         }
 

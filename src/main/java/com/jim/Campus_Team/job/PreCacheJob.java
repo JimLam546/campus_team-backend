@@ -28,7 +28,7 @@ public class PreCacheJob {
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
 
-    @Value("temp_Id")
+    @Value("${RedisKey.temp_Id}")
     private String temp_Id;
 
     @Scheduled(cron = "0 0 0 * * *")

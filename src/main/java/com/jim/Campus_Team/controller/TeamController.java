@@ -149,6 +149,11 @@ public class TeamController {
         return ResultUtil.success(true);
     }
 
+    /**
+     * 我所在的队伍
+     * @param request
+     * @return
+     */
     @GetMapping("/list/myTeam")
     public BaseResponse<List<TeamUserVO>> hasJoinTeamList(HttpServletRequest request) {
         // 获取加入队伍还没有实现可以搜索
@@ -162,6 +167,92 @@ public class TeamController {
         // 根据teamId分组
         List<Long> teamIdList = userTeams.stream().map((UserTeam::getTeamId)).collect(Collectors.toList());
         List<Team> teamList = teamService.query().in("id", teamIdList).list();
+        List<TeamUserVO> teamUserVOs = teamList.stream().map((team) -> {
+            TeamUserVO teamUserVO = new TeamUserVO();
+            BeanUtils.copyProperties(team, teamUserVO);
+            // 更新队长VO信息
+            User user = userService.query().eq("id", team.getUserId()).one();
+            UserVO userVO = new UserVO();
+            BeanUtils.copyProperties(user, userVO);
+            teamUserVO.setCreateUser(userVO);
+            // 更换时间格式
+            teamUserVO.setCreateTime(userService.setTimeFormat(team.getCreateTime()));
+            teamUserVO.setUpdateTime(userService.setTimeFormat(team.getUpdateTime()));
+            teamUserVO.setExpireTime(userService.setTimeFormat(team.getExpireTime()));
+
+            // 获取我的队伍列中的队伍人数
+            QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("teamId", team.getId());
+            teamUserVO.setHasJoinNum((int) userTeamService.count(queryWrapper));
+            // 设置我是否加入队伍
+            teamUserVO.setHasJoin(true);
+            return teamUserVO;
+        }).collect(Collectors.toList());
+        return ResultUtil.success(teamUserVOs);
+    }
+
+    /**
+     * 我创建的队伍
+     * @param request
+     * @return
+     */
+    @GetMapping("/list/myCreate")
+    public BaseResponse<List<TeamUserVO>> hasCreateTeamList(HttpServletRequest request) {
+        User loginUser = userService.getLoginUser(request);
+        List<UserTeam> userTeams = userTeamService.query().eq("userId", loginUser.getId()).list();
+        if(CollectionUtils.isEmpty(userTeams))
+            return ResultUtil.success(new ArrayList<>());
+
+        // 根据teamId分组
+        List<Long> teamIdList = userTeams.stream().map((UserTeam::getTeamId)).collect(Collectors.toList());
+        List<Team> teamList = teamService.query().in("id", teamIdList).list();
+        // 如果自己是队长则过滤掉
+        teamList = teamList.stream()
+                .filter(team -> loginUser.getId().equals(team.getUserId()))
+                .collect(Collectors.toList());
+        List<TeamUserVO> teamUserVOs = teamList.stream().map((team) -> {
+            TeamUserVO teamUserVO = new TeamUserVO();
+            BeanUtils.copyProperties(team, teamUserVO);
+            // 更新队长VO信息
+            User user = userService.query().eq("id", team.getUserId()).one();
+            UserVO userVO = new UserVO();
+            BeanUtils.copyProperties(user, userVO);
+            teamUserVO.setCreateUser(userVO);
+            // 更换时间格式
+            teamUserVO.setCreateTime(userService.setTimeFormat(team.getCreateTime()));
+            teamUserVO.setUpdateTime(userService.setTimeFormat(team.getUpdateTime()));
+            teamUserVO.setExpireTime(userService.setTimeFormat(team.getExpireTime()));
+
+            // 获取我的队伍列中的队伍人数
+            QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("teamId", team.getId());
+            teamUserVO.setHasJoinNum((int) userTeamService.count(queryWrapper));
+            // 设置我是否加入队伍
+            teamUserVO.setHasJoin(true);
+            return teamUserVO;
+        }).collect(Collectors.toList());
+        return ResultUtil.success(teamUserVOs);
+    }
+
+    /**
+     * 我加入的队伍，不包括自己创建的
+     * @param request
+     * @return
+     */
+    @GetMapping("/list/myJoin")
+    public BaseResponse<List<TeamUserVO>> myHasJoinTeamList(HttpServletRequest request) {
+        User loginUser = userService.getLoginUser(request);
+        List<UserTeam> userTeams = userTeamService.query().eq("userId", loginUser.getId()).list();
+        if(CollectionUtils.isEmpty(userTeams))
+            return ResultUtil.success(new ArrayList<>());
+
+        // 根据teamId分组
+        List<Long> teamIdList = userTeams.stream().map((UserTeam::getTeamId)).collect(Collectors.toList());
+        List<Team> teamList = teamService.query().in("id", teamIdList).list();
+        // 如果自己是队长则过滤掉
+        teamList = teamList.stream()
+                .filter(team -> !loginUser.getId().equals(team.getUserId()))
+                .collect(Collectors.toList());
         List<TeamUserVO> teamUserVOs = teamList.stream().map((team) -> {
             TeamUserVO teamUserVO = new TeamUserVO();
             BeanUtils.copyProperties(team, teamUserVO);

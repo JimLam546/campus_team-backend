@@ -26,7 +26,7 @@ mybatis-plus:
 knife4j:
   enable: true
   openapi:
-    title: 校园组队系统接口文档
+    title: 校园组队平台接口文档
     description: 接口文档
     email: chen@foxmail.com
     concat: 123
@@ -36,4 +36,5 @@ knife4j:
     license-url: https://stackoverflow.com/
     terms-of-service-url: https://stackoverflow.com/
 AvatarPath: userAvatar\
-temp_Id: 9
+RedisKey:
+  temp_Id: 9
