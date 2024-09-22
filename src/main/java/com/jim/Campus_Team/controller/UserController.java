@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 import static com.jim.Campus_Team.common.ErrorCode.*;
 import static com.jim.Campus_Team.contant.UserConstant.USER_LOGIN_STATE;
 
-@CrossOrigin(origins = {"http://localhost:5173"}, allowCredentials = "true")
+@CrossOrigin(origins = {"http://47.115.163.154:5173", "http://47.115.163.154:80", "http://localhost:5173"}, allowCredentials = "true")
 @RestController
 @RequestMapping("/user")
 public class UserController {

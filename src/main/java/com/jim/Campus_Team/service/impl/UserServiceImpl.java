@@ -247,6 +247,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
                 .collect(Collectors.toList());
         QueryWrapper<User> resultQuery = new QueryWrapper<>();
         List<Long> idList = pairList.stream().map(Pair::getKey).collect(Collectors.toList());
+        if (idList.size() == 0) {
+            return Collections.emptyList();
+        }
         String ids = StringUtils.join(idList, ',');
         resultQuery.in("id", idList);
         resultQuery.last("ORDER BY FIELD( 'id', " + ids + ")");

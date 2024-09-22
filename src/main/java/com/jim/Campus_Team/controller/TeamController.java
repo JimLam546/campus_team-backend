@@ -21,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +32,7 @@ import static com.jim.Campus_Team.contant.UserConstant.USER_LOGIN_STATE;
 
 @RestController
 @RequestMapping("/team")
-@CrossOrigin(origins = {"http://localhost:5173"}, allowCredentials = "true")
+@CrossOrigin(origins = {"http://47.115.163.154:80", "http://47.115.163.154:5173", "http://localhost:5173"}, allowCredentials = "true")
 public class TeamController {
 
     @Resource
