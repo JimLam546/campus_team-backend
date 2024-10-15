@@ -1,7 +1,7 @@
 # campus_team-backend
 
 #### 项目介绍
-校园伙伴匹配平台，基于 Vue3 + Spring Boot 2 的移动端网站，实现了用户管理、按标签检索用户、推荐相似用户、组队等功能。
+校园同行平台，基于 Vue3 + Spring Boot 2 的移动端网站，实现了用户管理、按标签检索用户、推荐相似用户、组队等功能。
 后端使用 SpringBoot+ MyBatis-Plus + MySQL + Redis 等技术,结合**阿里云OSS**完成图片上传。
 
 #### 在线体验

@@ -29,7 +29,10 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -118,7 +121,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         // 用户信息脱敏
         User safeUser = getSafeUser(user);
-
         request.getSession().setAttribute(USER_LOGIN_STATE, safeUser);
         return new BaseResponse<>(0, safeUser);
     }
@@ -254,8 +256,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         resultQuery.in("id", idList);
         resultQuery.last("ORDER BY FIELD( 'id', " + ids + ")");
         List<User> resList = this.list(resultQuery);
-        if (CollectionUtils.isEmpty(resList))
+        if (CollectionUtils.isEmpty(resList)) {
             return new ArrayList<>();
+        }
         return resList.stream().map(u -> {
             UserVO userVO = new UserVO();
             BeanUtils.copyProperties(u, userVO);

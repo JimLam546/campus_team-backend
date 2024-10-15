@@ -1,9 +1,15 @@
 package com.jim.Campus_Team.service;
 
 import cn.hutool.core.util.RandomUtil;
-import cn.hutool.json.JSONUtil;
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.context.AnalysisContext;
+import com.alibaba.excel.read.listener.PageReadListener;
+import com.alibaba.excel.read.listener.ReadListener;
+import com.alibaba.excel.util.ListUtils;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.jim.Campus_Team.entity.domain.User;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -12,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @SpringBootTest
+@Slf4j
 class UserServiceTest {
     @Resource
     private UserService userService;
@@ -79,5 +86,45 @@ class UserServiceTest {
         }
         // 随机抽取的个数
 
+    }
+
+    @Test
+    public void importUser() {
+        String file = "E:\\项目\\伙伴匹配系统\\campus_team-backend\\src\\main\\resources\\test.xlsx";
+
+        EasyExcel.read(file, User.class, new ReadListener<User>() {
+            /**
+             * 单次缓存的数据量
+             */
+            public static final int BATCH_COUNT = 100;
+            /**
+             *临时存储
+             */
+            private List<User> cachedDataList = ListUtils.newArrayListWithExpectedSize(BATCH_COUNT);
+
+            @Override
+            public void invoke(User data, AnalysisContext context) {
+                cachedDataList.add(data);
+                System.out.println(data);
+                if (cachedDataList.size() >= BATCH_COUNT) {
+                    saveData();
+                    // 存储完成清理 list
+                    cachedDataList = ListUtils.newArrayListWithExpectedSize(BATCH_COUNT);
+                }
+            }
+
+            @Override
+            public void doAfterAllAnalysed(AnalysisContext context) {
+                saveData();
+            }
+
+            /**
+             * 加上存储数据库
+             */
+            private void saveData() {
+                log.info("{}条数据，开始存储数据库！", cachedDataList.size());
+                log.info("存储数据库成功！");
+            }
+        }).sheet().doRead();
     }
 }

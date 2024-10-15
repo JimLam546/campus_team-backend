@@ -4,14 +4,17 @@ import com.jim.Campus_Team.entity.domain.Team;
 import com.jim.Campus_Team.entity.domain.User;
 import com.jim.Campus_Team.service.TeamService;
 import com.jim.Campus_Team.service.UserService;
+import jodd.util.collection.CompositeEnumeration;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StopWatch;
 
 import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.*;
 
 @SpringBootTest
 class UserCenterApplicationTests {
@@ -45,26 +48,36 @@ class UserCenterApplicationTests {
     void importUsers() {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
-        ArrayList<User> userList = new ArrayList<>();
         int i = 0;
-        do {
-            i++;
-            User user = new User();
-            user.setUsername("testUser");
-            user.setUserAccount("test");
-            user.setGender(0);
-            user.setUserPassword("123456789");
-            user.setPhone("123456");
-            user.setEmail("123.com");
-            user.setIsVaild(0);
-            user.setIsDelete(0);
-            user.setUserRole(0);
-            user.setTags("[\"python\"]");
-            user.setProfile("hello");
-            userList.add(user);
-        } while (i % 10000 != 0);
-        for(int j = 0; j < 10; j++)
-            userService.saveBatch(userList);
+        ExecutorService executor = new ThreadPoolExecutor(5,
+                10,
+                1000,
+                TimeUnit.MILLISECONDS,
+                new ArrayBlockingQueue<>(100000));
+        List<CompletableFuture<Void>> futureList = new ArrayList<>();
+        for(int j = 0; j < 100; j++) {
+            List<User> userList = new ArrayList<>(10000);
+            do {
+                i++;
+                User user = new User();
+                user.setUsername("testUser");
+                user.setUserAccount("test");
+                user.setGender(0);
+                user.setUserPassword("123456789");
+                user.setPhone("123456");
+                user.setEmail("123.com");
+                user.setIsVaild(0);
+                user.setIsDelete(0);
+                user.setUserRole(0);
+                user.setTags("[\"python\"]");
+                user.setProfile("hello");
+                userList.add(user);
+            } while (i % 10000 != 0);
+            CompletableFuture<Void> future =
+                    CompletableFuture.runAsync(() -> userService.saveBatch(userList), executor);
+            futureList.add(future);
+        }
+        CompletableFuture.allOf(futureList.toArray(new CompletableFuture[]{})).join();
         stopWatch.stop();
         System.out.println(stopWatch.getTotalTimeMillis());
     }

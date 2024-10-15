@@ -31,7 +31,7 @@ public class PreCacheJob {
     @Value("${RedisKey.temp_Id}")
     private String temp_Id;
 
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "20 00 14 * * *")
     public void doCacheRecommendUser() {
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         Page<User> userPage = userService.page(new Page<>(1, 20), queryWrapper);
@@ -43,7 +43,9 @@ public class PreCacheJob {
         try {
             valueOperations.set(redisKey, userPage, 24, TimeUnit.HOURS);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
     }
+
+
 }
