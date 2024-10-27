@@ -1,10 +1,10 @@
 # 忽略文件夹
 /target/
-/.idea/
+/.idea
 
 # 忽略配置文件
 /src/main/resources/application.yml
-
+/src/main/java/com/jim/Campus_Team/common/OSSUploadUtil.java
 # Compiled class file
 *.class
 
