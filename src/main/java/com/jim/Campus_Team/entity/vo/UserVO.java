@@ -67,6 +67,11 @@ public class UserVO {
     private String profile;
 
     /**
+     * 好友
+     */
+    private String friendIds;
+
+    /**
      * 格式化后的时间
     */
     private String createTimeStr;

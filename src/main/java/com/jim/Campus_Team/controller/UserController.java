@@ -1,6 +1,7 @@
 package com.jim.Campus_Team.controller;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -21,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +32,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -212,6 +215,9 @@ public class UserController {
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
 
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
+
     @Value("${RedisKey.temp_Id}")
     private String temp_Id;
 
@@ -219,29 +225,29 @@ public class UserController {
     public BaseResponse<List<UserVO>> recommendUsers(long pageSize, long pageNum, HttpServletRequest request) {
         User loginUser = userService.getLoginUser(request);
         String redisKey = String.format("user:recommend:%s", temp_Id);
-        ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
+        ValueOperations<String, String> valueOperations = stringRedisTemplate.opsForValue();
         // 如果有缓存，直接读缓存
-        Page<User> userPage = null;
-        userPage = (Page<User>) valueOperations.get(redisKey);
-        if (userPage != null) {
-            List<UserVO> userVOList = userPage.getRecords().stream().map(
+        List<User> userPage = null;
+        userPage = JSONUtil.toList(valueOperations.get(redisKey), User.class);
+        if (!userPage.isEmpty()) {
+            List<UserVO> userVOList = userPage.stream().map(
                             user -> BeanUtil.copyProperties(user, UserVO.class))
                     .collect(Collectors.toList());
             return ResultUtil.success(userVOList);
         }
         // 无缓存，查数据库
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        userPage = userService.page(new Page<>(pageNum, pageSize), queryWrapper);
+        userPage = userService.page(new Page<>(pageNum, pageSize), queryWrapper).getRecords();
         // 写缓存
         try {
             Object o = valueOperations.get(redisKey);
             if (o == null) {
-                valueOperations.set(redisKey, userPage, 24, TimeUnit.HOURS);
+                valueOperations.set(redisKey, JSONUtil.toJsonStr(userPage), 24, TimeUnit.HOURS);
             }
         } catch (Exception e) {
-            // log.error("redis set key error", e);
+            System.out.println(new Date() + "：" + e.getMessage());
         }
-        List<UserVO> userVOList = userPage.getRecords().stream().map(
+        List<UserVO> userVOList = userPage.stream().map(
                         user -> BeanUtil.copyProperties(user, UserVO.class))
                 .collect(Collectors.toList());
         return ResultUtil.success(userVOList);
