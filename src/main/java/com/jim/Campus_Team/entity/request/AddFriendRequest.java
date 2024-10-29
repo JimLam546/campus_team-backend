@@ -1,10 +1,8 @@
 package com.jim.Campus_Team.entity.request;
 
-import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.Date;
 
 /**
  * @author Jim_Lam
@@ -14,10 +12,6 @@ import java.util.Date;
 @Data
 public class AddFriendRequest implements Serializable {
     private static final long serialVersionUID = -5983121027851058561L;
-    /**
-     * 发送用户
-     */
-    private Long fromId;
 
     /**
      * 接收用户

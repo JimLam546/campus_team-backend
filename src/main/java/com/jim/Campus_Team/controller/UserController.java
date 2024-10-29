@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jim.Campus_Team.common.BaseResponse;
 import com.jim.Campus_Team.common.ErrorCode;
 import com.jim.Campus_Team.common.ResultUtil;
+import com.jim.Campus_Team.entity.domain.Friends;
 import com.jim.Campus_Team.entity.domain.User;
 import com.jim.Campus_Team.entity.domain.UserId;
 import com.jim.Campus_Team.entity.request.PageRequest;
@@ -17,6 +18,7 @@ import com.jim.Campus_Team.entity.request.UserLoginRequest;
 import com.jim.Campus_Team.entity.request.UserRegisterRequest;
 import com.jim.Campus_Team.entity.vo.UserVO;
 import com.jim.Campus_Team.exception.BusinessException;
+import com.jim.Campus_Team.service.FriendsService;
 import com.jim.Campus_Team.service.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -46,6 +48,9 @@ import static com.jim.Campus_Team.contant.UserConstant.USER_LOGIN_STATE;
 public class UserController {
     @Resource
     private UserService userService;
+
+    @Resource
+    private FriendsService friendsService;
 
     @PostMapping("/register")
     public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
@@ -299,21 +304,22 @@ public class UserController {
 
     @GetMapping("/query/{id}")
     public BaseResponse<UserVO> query(HttpServletRequest request, @PathVariable("id") long id) {
-        try {
-            Object attribute = request.getSession().getAttribute(USER_LOGIN_STATE);
-            if (attribute == null)
-                throw new RuntimeException();
-        } catch (Exception e) {
-            throw new BusinessException(NOT_LOGIN, "身份信息异常，请重新登录");
-        }
+        User loginUser =(User) request.getSession().getAttribute(USER_LOGIN_STATE);
+        if (loginUser == null)
+            throw new BusinessException(NOT_LOGIN);
         if (id < 1)
             throw new BusinessException(PARAMETER_ERROR, "用户不存在");
         User user = userService.getById(id);
-        System.out.println(user);
         UserVO userVO = BeanUtil.copyProperties(user, UserVO.class);
+        // 验证是不是登录用户的好友
+        Friends friend = friendsService.lambdaQuery()
+                .eq(Friends::getFriendId, id)
+                .eq(Friends::getFromId, loginUser.getId()).one();
+        if(friend != null) {
+            userVO.setFriend(true);
+        }
         SimpleDateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         userVO.setCreateTimeStr(timeFormat.format(user.getCreateTime()));
-        System.out.println(userVO);
         return ResultUtil.success(userVO);
     }
 

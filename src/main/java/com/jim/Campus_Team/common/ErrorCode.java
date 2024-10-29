@@ -9,6 +9,8 @@ public enum ErrorCode {
     NO_AUTO(40101, "没有权限", ""),
     USER_ERROR(400102, "账号异常", ""),
     USER_LOGIN_EXPIRE(400103, "session 过期", "身份过期"),
+    IS_FRIEND(4002001, "对方已是好友", "对方已是好友"),
+    IS_OPERATE(4002002, "请求已被操作", "请求已被操作"),
     SYSTEM_ERROR(50000, "服务器内部错误", "");
 
 

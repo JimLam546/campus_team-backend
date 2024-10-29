@@ -90,7 +90,7 @@ public class TeamController {
         List<UserTeam> userTeamList = userTeamService.list(queryWrapper);
         Set<Long> hasJoinTeamSet = userTeamList.stream().map(UserTeam::getTeamId).collect(Collectors.toSet());
         teamList.forEach(team -> {
-            System.out.println(team);
+            // System.out.println(team);
             boolean isHasJoin = hasJoinTeamSet.contains(team.getId());
             team.setHasJoin(isHasJoin);
         });

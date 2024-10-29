@@ -60,7 +60,7 @@ public class RequestController {
 
     /**
      * 操作好友请求
-     * @param addFriendRequest
+     * @param opsFriendRequest
      * @param request
      * @return
      */
