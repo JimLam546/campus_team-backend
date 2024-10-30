@@ -15,22 +15,7 @@ public class FriendRequestVO implements Serializable {
     /**
      * 发送者
      */
-    private String fromId;
-
-    /**
-     * 发送者名称
-     */
-    private String fromName;
-
-    /**
-     * 接收用户
-     */
-    private Long receiveId;
-
-    /**
-     * 接收用户名称
-     */
-    private Long receiveName;
+    private UserVO fromUserVO;
 
     /**
      * 是否读取；0-未读，1-已读

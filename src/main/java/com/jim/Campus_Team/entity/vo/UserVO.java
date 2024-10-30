@@ -69,7 +69,7 @@ public class UserVO {
     /**
      * 好友
      */
-    private boolean isFriend;
+    private boolean friend;
 
     /**
      * 格式化后的时间

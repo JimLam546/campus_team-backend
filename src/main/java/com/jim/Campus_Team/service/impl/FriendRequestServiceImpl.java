@@ -58,6 +58,11 @@ public class FriendRequestServiceImpl extends ServiceImpl<FriendRequestMapper, F
         if (friendIdList.contains(receiveId)) {
             throw new BusinessException(ErrorCode.IS_FRIEND);
         }
+        // 验证是否已经发送过请求（发送方是自己、接收方是对方、请求未操作）
+        Long count = this.lambdaQuery().eq(FriendRequest::getFromId, id).eq(FriendRequest::getReceiveId, addFriendRequest.getReceiveId()).eq(FriendRequest::getState, NOT_OPERATE).count();
+        if(count > 0) {
+            throw new BusinessException(ErrorCode.IS_REQUEST);
+        }
         FriendRequest friendRequest = new FriendRequest();
         friendRequest.setFromId(id);
         BeanUtil.copyProperties(addFriendRequest, friendRequest);

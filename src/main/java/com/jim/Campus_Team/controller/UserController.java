@@ -315,7 +315,7 @@ public class UserController {
         Friends friend = friendsService.lambdaQuery()
                 .eq(Friends::getFriendId, id)
                 .eq(Friends::getFromId, loginUser.getId()).one();
-        if(friend != null) {
+        if(friend != null || loginUser.getId().equals(id)) {
             userVO.setFriend(true);
         }
         SimpleDateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");

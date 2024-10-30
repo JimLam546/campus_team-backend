@@ -9,8 +9,10 @@ import com.jim.Campus_Team.entity.domain.User;
 import com.jim.Campus_Team.entity.request.AddFriendRequest;
 import com.jim.Campus_Team.entity.request.OpsFriendRequest;
 import com.jim.Campus_Team.entity.vo.FriendRequestVO;
+import com.jim.Campus_Team.entity.vo.UserVO;
 import com.jim.Campus_Team.exception.BusinessException;
 import com.jim.Campus_Team.service.FriendRequestService;
+import com.jim.Campus_Team.service.UserService;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -34,6 +36,9 @@ public class RequestController {
     @Resource
     private FriendRequestService friendRequestService;
 
+    @Resource
+    private UserService userService;
+
     /**
      * 创建好友请求
      * @param addFriendRequest
@@ -42,17 +47,17 @@ public class RequestController {
      */
     @PostMapping("/addFriend")
     public BaseResponse<Boolean> createRequest(@RequestBody AddFriendRequest addFriendRequest,
-                                                     HttpServletRequest request) {
+                                               HttpServletRequest request) {
         User loginUser = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
-        if(loginUser == null) {
+        if (loginUser == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN);
         }
         Long receiveId = addFriendRequest.getReceiveId();
-        if (receiveId == null || receiveId < 1 ) {
+        if (receiveId == null || receiveId < 1) {
             throw new BusinessException(ErrorCode.PARAMETER_ERROR);
         }
         boolean isCreate = friendRequestService.createRequest(addFriendRequest, loginUser.getId());
-        if(!isCreate) {
+        if (!isCreate) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR);
         }
         return ResultUtil.success(true);
@@ -60,20 +65,21 @@ public class RequestController {
 
     /**
      * 操作好友请求
+     *
      * @param opsFriendRequest
      * @param request
      * @return
      */
     @PostMapping("/opsFriend")
     public BaseResponse<Boolean> opsFriend(@RequestBody OpsFriendRequest opsFriendRequest,
-                                                   HttpServletRequest request) {
+                                           HttpServletRequest request) {
         // 登录用户为请求接收者
         User loginUser = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
-        if(loginUser == null) {
+        if (loginUser == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN);
         }
         boolean result = friendRequestService.opsFriend(opsFriendRequest, loginUser.getId());
-        if(!result) {
+        if (!result) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR);
         }
         return ResultUtil.success(true);
@@ -85,16 +91,27 @@ public class RequestController {
     @GetMapping("/getRequestList")
     public List<FriendRequestVO> getRequestList(HttpServletRequest request) {
         User loginUser = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
-        if(loginUser == null) {
+        if (loginUser == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN);
         }
+        Long userId = loginUser.getId();
         List<FriendRequest> friendRequestList = friendRequestService.lambdaQuery()
-                .eq(FriendRequest::getFromId, loginUser.getId())
-                .or()
                 .eq(FriendRequest::getReceiveId, loginUser.getId())
                 .list();
         return friendRequestList.stream()
-                .map(friendRequest -> BeanUtil.copyProperties(friendRequest, FriendRequestVO.class))
+                .map(friendRequest -> {
+                    FriendRequestVO friendRequestVO = new FriendRequestVO();
+                    BeanUtil.copyProperties(friendRequest, friendRequestVO);
+                    // 修改时间格式
+                    friendRequestVO.setCreateTime(userService.setTimeFormat(friendRequest.getCreateTime()));
+                    // 获取用户实例
+                    if (!friendRequest.getFromId().equals(userId)) {
+                        friendRequestVO.setFromUserVO(
+                                BeanUtil.copyProperties(
+                                        userService.getById(friendRequest.getFromId()), UserVO.class));
+                    }
+                    return friendRequestVO;
+                })
                 .collect(Collectors.toList());
     }
 }
