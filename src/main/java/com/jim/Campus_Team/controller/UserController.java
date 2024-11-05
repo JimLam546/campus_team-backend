@@ -20,6 +20,7 @@ import com.jim.Campus_Team.entity.vo.UserVO;
 import com.jim.Campus_Team.exception.BusinessException;
 import com.jim.Campus_Team.service.FriendsService;
 import com.jim.Campus_Team.service.UserService;
+import io.swagger.annotations.Api;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,6 +46,7 @@ import static com.jim.Campus_Team.contant.UserConstant.USER_LOGIN_STATE;
 @CrossOrigin(origins = {"http://47.115.163.154:5173", "http://47.115.163.154:80", "http://localhost:5173"}, allowCredentials = "true")
 @RestController
 @RequestMapping("/user")
+@Api(tags = "用户模块")
 public class UserController {
     @Resource
     private UserService userService;

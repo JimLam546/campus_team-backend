@@ -13,6 +13,7 @@ import com.jim.Campus_Team.entity.vo.UserVO;
 import com.jim.Campus_Team.exception.BusinessException;
 import com.jim.Campus_Team.service.FriendRequestService;
 import com.jim.Campus_Team.service.UserService;
+import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -31,6 +32,7 @@ import static com.jim.Campus_Team.contant.UserConstant.USER_LOGIN_STATE;
 @CrossOrigin(value = {"http://localhost:5173"}, allowCredentials = "true")
 @RestController
 @RequestMapping("/request")
+@Api(tags = "好友请求模块")
 public class RequestController {
 
     @Resource

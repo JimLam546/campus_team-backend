@@ -23,7 +23,11 @@
         <!--    <artifactId>mybatis-spring-boot-starter</artifactId>-->
         <!--    <version>2.2.2</version>-->
         <!--</dependency>-->
-
+        <!--websocket-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
@@ -117,7 +121,6 @@
             <artifactId>aliyun-sdk-oss</artifactId>
             <version>3.17.4</version>
         </dependency>
-
 
         <dependency>
             <groupId>com.alibaba</groupId>

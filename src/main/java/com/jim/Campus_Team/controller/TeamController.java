@@ -14,6 +14,7 @@ import com.jim.Campus_Team.exception.BusinessException;
 import com.jim.Campus_Team.service.TeamService;
 import com.jim.Campus_Team.service.UserService;
 import com.jim.Campus_Team.service.UserTeamService;
+import io.swagger.annotations.Api;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +34,7 @@ import static com.jim.Campus_Team.contant.UserConstant.USER_LOGIN_STATE;
 @RestController
 @RequestMapping("/team")
 @CrossOrigin(origins = {"http://47.115.163.154:80", "http://47.115.163.154:5173", "http://localhost:5173"}, allowCredentials = "true")
+@Api(tags = "队伍模块")
 public class TeamController {
 
     @Resource

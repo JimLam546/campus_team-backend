@@ -31,7 +31,7 @@ public class PreCacheJob {
     @Value("${RedisKey.temp_Id}")
     private String temp_Id;
 
-    @Scheduled(cron = "20 00 14 * * *")
+    @Scheduled(cron = "0 0 0 * * *")
     public void doCacheRecommendUser() {
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         Page<User> userPage = userService.page(new Page<>(1, 20), queryWrapper);
