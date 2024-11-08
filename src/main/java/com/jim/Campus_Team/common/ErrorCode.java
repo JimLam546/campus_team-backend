@@ -12,6 +12,7 @@ public enum ErrorCode {
     IS_FRIEND(4002001, "对方已是好友", "对方已是好友"),
     IS_OPERATE(4002002, "请求已被操作", "请求已被操作"),
     IS_REQUEST(4002003, "请勿重复发送申请", "请勿重复发送申请"),
+    NOT_CHAT_HISTORY(4003001, "没有聊天记录", "没有聊天记录"),
     SYSTEM_ERROR(50000, "服务器内部错误", "");
 
 

@@ -2,9 +2,13 @@ package com.jim.Campus_Team.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.jim.Campus_Team.entity.domain.Chat;
+import com.jim.Campus_Team.entity.domain.User;
+import com.jim.Campus_Team.entity.request.ChatRequest;
 import com.jim.Campus_Team.entity.vo.ChatMessageVO;
+import com.jim.Campus_Team.entity.vo.PrivateChatUserVO;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author Jim_Lam
@@ -13,5 +17,11 @@ import java.util.Date;
  */
 public interface ChatService extends IService<Chat> {
 
-    ChatMessageVO chatResult(Long userId, Long toId, String text, Integer chatType, Date createTime);
+    List<ChatMessageVO> getPrivateChat(ChatRequest chatRequest, int chatType, User loginUser);
+
+    ChatMessageVO chatResult(Long userId, String text, Integer chatType, Date createTime);
+
+    ChatMessageVO chatResult(Long userId, Long toId, String text, Date createTime);
+
+    List<PrivateChatUserVO> getPrivateChatList(User loginUser);
 }

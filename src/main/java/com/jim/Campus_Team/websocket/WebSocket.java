@@ -2,6 +2,8 @@ package com.jim.Campus_Team.websocket;
 
 import cn.hutool.json.JSONObject;
 import com.google.gson.Gson;
+import com.jim.Campus_Team.config.HttpSessionConfig;
+import com.jim.Campus_Team.entity.domain.Chat;
 import com.jim.Campus_Team.entity.domain.User;
 import com.jim.Campus_Team.entity.domain.UserTeam;
 import com.jim.Campus_Team.entity.request.MessageRequest;
@@ -26,6 +28,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.jim.Campus_Team.contant.ChatConstant.PRIVATE_CHAT;
+import static com.jim.Campus_Team.contant.ChatConstant.TEAM_CHAT;
 import static com.jim.Campus_Team.contant.UserConstant.USER_LOGIN_STATE;
 
 /**
@@ -36,11 +39,11 @@ import static com.jim.Campus_Team.contant.UserConstant.USER_LOGIN_STATE;
 
 @Slf4j
 @Component
-@ServerEndpoint(value = "/chat/{userId}/{teamId}")
+@ServerEndpoint(value = "/chat/{userId}/{teamId}", configurator = HttpSessionConfig.class)
 public class WebSocket {
 
     /**
-     * <队伍id：<用户id：webSocket>>  </>
+     * <队伍id：<用户id：webSocket>>
      */
     private static final Map<String, ConcurrentHashMap<String, WebSocket>> ROOMS = new HashMap<>();
 
@@ -106,7 +109,7 @@ public class WebSocket {
         this.session = session;
         this.httpSession = httpSession;
         // 群聊
-        if (!"Nan".equals(teamId)) {
+        if (!"NaN".equals(teamId)) {
             // 验证用户在不在队伍内
             UserTeam one = userTeamService.lambdaQuery()
                     .select(UserTeam::getUserId)
@@ -143,6 +146,7 @@ public class WebSocket {
             sendOneMessage(userId, "PONG");
             return;
         }
+        log.info("服务端接收到用户 " + userId + " 发送的: " + message);
         MessageRequest messageRequest = new Gson().fromJson(message, MessageRequest.class);
         Long toId = messageRequest.getToId();
         Long teamId = messageRequest.getTeamId();
@@ -151,12 +155,22 @@ public class WebSocket {
         if (PRIVATE_CHAT.equals(chatType)) {
             // 私聊
             private_chat(Long.parseLong(userId), toId, text, chatType);
+        } else if (TEAM_CHAT.equals(chatType)) {
+            // 群聊
+            team_chat(Long.parseLong(userId), teamId, text, chatType);
         }
     }
 
+
     @OnClose
     public void onClose(@PathParam("userId") String userId, @PathParam(value = "teamId") String teamId, Session session) {
-
+        if ("NaN".equals(teamId)) {
+            if (!SESSION_POOL.isEmpty()) {
+                SESSION_POOL.remove(userId);
+            }
+        } else {
+            ROOMS.get(teamId).remove(userId);
+        }
     }
 
     /**
@@ -168,7 +182,7 @@ public class WebSocket {
     private void sendError(String userId, String errorMessage) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.set("error", errorMessage);
-        sendOneMessage(userId, errorMessage);
+        sendOneMessage(userId, jsonObject.toString());
     }
 
     /**
@@ -197,15 +211,67 @@ public class WebSocket {
      * @param chatType 聊天类型
      */
     public void private_chat(Long userId, Long toId, String text, Integer chatType) {
-        ChatMessageVO chatMessageVO = chatService.chatResult(userId, toId, text, chatType, new Date());
+        ChatMessageVO chatMessageVO = chatService.chatResult(userId, text, chatType, new Date());
         User loginUser = (User) httpSession.getAttribute(USER_LOGIN_STATE);
         if(loginUser.getId().equals(toId)) {
             chatMessageVO.setMyMessage(true);
         }
         String json = new Gson().toJson(chatMessageVO);
+        // 发送消息
         sendOneMessage(toId.toString(), json);
+        // 消息保存
+        boolean result = saveChat(userId, toId, null, text, chatType);
+        if (!result) {
+            log.error("userId=" + userId + ",发送私聊消息失败：" + text);
+        }
+        // todo 将缓存中的用户消息删除（保证数据一致性）
+    }
 
-        // https://gitee.com/-/ide/project/kcsen/campus-backend-master/edit/master/-/src/main/java/com/shier/ws/WebSocket.java
+    /**
+     * 群发消息
+     * @param userId 发送者
+     * @param teamId 队伍id
+     * @param text 内容
+     * @param chatType 聊天类型
+     */
+    private void team_chat(Long userId, Long teamId, String text, Integer chatType) {
+        ChatMessageVO chatMessageVO = chatService.chatResult(userId, text, chatType, new Date());
+        broadcastMessage(teamId, text);
+        boolean result = saveChat(userId, null, teamId, text, chatType);
+        if(!result) {
+            log.error("userId=" + userId + ",teamId=" + teamId + ",发送群聊消息失败：" + text);
+        }
+
+    }
+
+    /**
+     * 广播消息
+     * @param teamId 队伍id
+     * @param text 聊天内容
+     */
+    private void broadcastMessage(Long teamId, String text) {
+        ConcurrentHashMap<String, WebSocket> inTeamUserWebSocket = ROOMS.get(teamId.toString());
+        for (WebSocket webSocket : inTeamUserWebSocket.values()) {
+            try {
+                webSocket.session.getBasicRemote().sendText(text);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private boolean saveChat(Long fromId, Long toId, Long teamId, String text, Integer chatType) {
+        Chat chat = new Chat();
+        chat.setFromId(fromId);
+        if (toId != null && toId > 0) {
+            chat.setToId(toId);
+        }
+        if(teamId != null && teamId > 0) {
+            chat.setTeamId(teamId);
+        }
+        chat.setText(text);
+        chat.setChatType(chatType);
+        return chatService.save(chat);
     }
 }
 
