@@ -37,7 +37,7 @@ public class ChatMessageVO implements Serializable {
     /**
      * 是不是自己的消息
      */
-    private boolean isMyMessage = false;
+    private boolean myMessage = false;
 
     /**
      * 消息类型

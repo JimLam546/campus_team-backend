@@ -5,25 +5,29 @@ import cn.hutool.core.lang.Pair;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jim.Campus_Team.common.ErrorCode;
 import com.jim.Campus_Team.entity.domain.Chat;
+import com.jim.Campus_Team.entity.domain.Team;
 import com.jim.Campus_Team.entity.domain.User;
+import com.jim.Campus_Team.entity.domain.UserTeam;
 import com.jim.Campus_Team.entity.request.ChatRequest;
 import com.jim.Campus_Team.entity.vo.ChatMessageVO;
 import com.jim.Campus_Team.entity.vo.ChatUserVO;
 import com.jim.Campus_Team.entity.vo.PrivateChatUserVO;
+import com.jim.Campus_Team.entity.vo.TeamChatVO;
 import com.jim.Campus_Team.exception.BusinessException;
 import com.jim.Campus_Team.mapper.ChatMapper;
 import com.jim.Campus_Team.service.ChatService;
+import com.jim.Campus_Team.service.TeamService;
 import com.jim.Campus_Team.service.UserService;
+import com.jim.Campus_Team.service.UserTeamService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.jim.Campus_Team.contant.ChatConstant.PRIVATE_CHAT;
+import static com.jim.Campus_Team.contant.ChatConstant.TEAM_CHAT;
 
 /**
  * @author Jim_Lam
@@ -37,7 +41,19 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat>
     @Resource
     private UserService userService;
 
+    @Resource
+    private TeamService teamService;
 
+    @Resource
+    private UserTeamService userTeamService;
+
+    /**
+     * 获取私聊消息
+     * @param chatRequest 聊天请求
+     * @param chatType 聊天类型
+     * @param loginUser 登录用户
+     * @return 私聊历史记录
+     */
     @Override
     public List<ChatMessageVO> getPrivateChat(ChatRequest chatRequest, int chatType, User loginUser) {
         Long toId = chatRequest.getToId();
@@ -45,7 +61,7 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat>
             throw new BusinessException(ErrorCode.PARAMETER_ERROR);
         }
         Long loginUserId = loginUser.getId();
-        List<Chat> chatList = lambdaQuery().select(Chat::getFromId, Chat::getToId, Chat::getChatType, Chat::getCreateTime)
+        List<Chat> chatList = lambdaQuery().select(Chat::getFromId, Chat::getToId, Chat::getText, Chat::getCreateTime)
                 .eq(Chat::getFromId, loginUserId)
                 .eq(Chat::getToId, toId)
                 .or()
@@ -63,6 +79,7 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat>
         return chatMessageVOList;
     }
 
+
     /**
      * 将用户信息封装传给接收的用户
      * @param userId 发送者id
@@ -79,6 +96,7 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat>
         chatMessageVO.setFromUser(BeanUtil.copyProperties(fromUser, ChatUserVO.class));
         // chatMessageVO.setToUser(BeanUtil.copyProperties(toUser, ChatUserVO.class));
         chatMessageVO.setChatType(chatType);
+        chatMessageVO.setText(text);
         chatMessageVO.setCreateTime(userService.setTimeFormat(createTime));
         return chatMessageVO;
     }
@@ -130,7 +148,8 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat>
             }
         }
         if (userIdSet.isEmpty()) {
-            throw new BusinessException(ErrorCode.NOT_CHAT_HISTORY);
+            return Collections.emptyList();
+            // throw new BusinessException(ErrorCode.NOT_CHAT_HISTORY);
         }
         List<User> userList = userService.listByIds(userIdSet);
         return userList.stream().map(user -> {
@@ -142,6 +161,70 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat>
             privateChatUserVO.setLastMessage(privateLastMessage.getKey());
             privateChatUserVO.setLastMessageDate(privateLastMessage.getValue());
             return privateChatUserVO;
+        }).collect(Collectors.toList());
+    }
+
+    /**
+     * 获取自己有消息的群聊列表
+     * @param loginUser 登录用户
+     * @return 群聊列表
+     */
+    @Override
+    public List<TeamChatVO> getTeamChatList(User loginUser) {
+        Long userId = loginUser.getId();
+        // 我加入的队伍
+        List<Long> teamIdList = userTeamService.lambdaQuery()
+                .select(UserTeam::getTeamId)
+                .eq(UserTeam::getUserId, userId)
+                .list()
+                .stream().map(UserTeam::getTeamId).collect(Collectors.toList());
+        List<Team> teamList = teamService.listByIds(teamIdList);
+        ArrayList<TeamChatVO> teamChatVOList = new ArrayList<>();
+        for (Team team : teamList) {
+            Chat chat = lambdaQuery()
+                    .eq(Chat::getTeamId, team.getId())
+                    .orderByDesc(Chat::getCreateTime)
+                    .last("limit 1").one();
+            if (chat == null) {
+                continue;
+            }
+            User user = userService.getById(chat.getFromId());
+            TeamChatVO chatUserVO = new TeamChatVO();
+            chatUserVO.setId(team.getId());
+            chatUserVO.setUsername(user.getUsername());
+            chatUserVO.setTeamName(team.getTeamName());
+            chatUserVO.setAvatarUrl(team.getAvatarUrl());
+            chatUserVO.setLastMessage(chat.getText());
+            chatUserVO.setLastMessageDate(chat.getCreateTime());
+            teamChatVOList.add(chatUserVO);
+        }
+        return teamChatVOList;
+
+    }
+
+    /**
+     * 获取群聊历史记录
+     * @param loginUser 登录用户
+     * @param teamId 队伍id
+     * @return 历史记录
+     */
+    @Override
+    public List<ChatMessageVO> getTeamChat(User loginUser, Long teamId) {
+        Long userId = loginUser.getId();
+        if (teamId == null || teamId < 1) {
+            throw new BusinessException(ErrorCode.PARAMETER_ERROR);
+        }
+        List<Chat> chatList = lambdaQuery().eq(Chat::getTeamId, teamId).list();
+        return chatList.stream().map(chat -> {
+            User user = userService.lambdaQuery().eq(User::getId, chat.getFromId()).one();
+            ChatMessageVO chatMessageVO = new ChatMessageVO();
+            chatMessageVO.setFromUser(BeanUtil.copyProperties(user, ChatUserVO.class));
+            chatMessageVO.setTeamId(teamId);
+            chatMessageVO.setText(chat.getText());
+            chatMessageVO.setMyMessage(chat.getFromId().equals(userId));
+            chatMessageVO.setChatType(TEAM_CHAT);
+            chatMessageVO.setCreateTime(userService.setTimeFormat(chat.getCreateTime()));
+            return chatMessageVO;
         }).collect(Collectors.toList());
     }
 

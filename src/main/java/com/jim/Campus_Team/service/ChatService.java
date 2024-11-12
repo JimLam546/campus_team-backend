@@ -6,6 +6,7 @@ import com.jim.Campus_Team.entity.domain.User;
 import com.jim.Campus_Team.entity.request.ChatRequest;
 import com.jim.Campus_Team.entity.vo.ChatMessageVO;
 import com.jim.Campus_Team.entity.vo.PrivateChatUserVO;
+import com.jim.Campus_Team.entity.vo.TeamChatVO;
 
 import java.util.Date;
 import java.util.List;
@@ -24,4 +25,8 @@ public interface ChatService extends IService<Chat> {
     ChatMessageVO chatResult(Long userId, Long toId, String text, Date createTime);
 
     List<PrivateChatUserVO> getPrivateChatList(User loginUser);
+
+    List<TeamChatVO> getTeamChatList(User loginUser);
+
+    List<ChatMessageVO> getTeamChat(User loginUser, Long teamId);
 }

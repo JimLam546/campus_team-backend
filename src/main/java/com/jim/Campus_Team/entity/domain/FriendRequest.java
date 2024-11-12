@@ -51,6 +51,11 @@ public class FriendRequest implements Serializable {
      */
     private Date createTime;
 
+    /**
+     * 逻辑删除（存在-0，删除-1）
+     */
+    private Integer isDelete;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 

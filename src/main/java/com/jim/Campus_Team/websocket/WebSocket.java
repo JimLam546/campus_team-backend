@@ -42,6 +42,8 @@ import static com.jim.Campus_Team.contant.UserConstant.USER_LOGIN_STATE;
 @ServerEndpoint(value = "/chat/{userId}/{teamId}", configurator = HttpSessionConfig.class)
 public class WebSocket {
 
+    // userId是登录用户id
+
     /**
      * <队伍id：<用户id：webSocket>>
      */
@@ -52,7 +54,7 @@ public class WebSocket {
     /**
      * Http 会话 Session
      */
-    private HttpSession httpSession;
+    private  HttpSession httpSession;
 
     /**
      * WebSocket 会话 Session
@@ -132,10 +134,32 @@ public class WebSocket {
             // 检查自己是否在 ROOMS 的群聊用户里存在
             ConcurrentHashMap<String, WebSocket> inTeamUserWebSocketMap = ROOMS.get(teamId);
             // 队伍群聊用户里，自己还未上线，则将该 websocket 添加进入
-            inTeamUserWebSocketMap.putIfAbsent(userId, this);
+            if (inTeamUserWebSocketMap.get(userId) == null) {
+                inTeamUserWebSocketMap.put(userId, this);
+            } else {
+                // 如果已存在，则关闭原来的 websocket
+                try {
+                    inTeamUserWebSocketMap.get(userId).session.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                } finally {
+                    inTeamUserWebSocketMap.put(userId, this);
+                }
+            }
         } else {
             // 私聊
-            SESSION_POOL.putIfAbsent(userId, session);
+            if (SESSION_POOL.get(userId) == null) {
+                SESSION_POOL.put(userId, session);
+            } else {
+                try {
+                    SESSION_POOL.get(userId).close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                } finally {
+                    SESSION_POOL.put(userId, session);
+                }
+            }
+            log.info("userId：" + userId + "，建立连接");
         }
     }
 
@@ -146,7 +170,7 @@ public class WebSocket {
             sendOneMessage(userId, "PONG");
             return;
         }
-        log.info("服务端接收到用户 " + userId + " 发送的: " + message);
+        // log.info("服务端接收到用户 " + userId + " 发送的: " + message);
         MessageRequest messageRequest = new Gson().fromJson(message, MessageRequest.class);
         Long toId = messageRequest.getToId();
         Long teamId = messageRequest.getTeamId();
@@ -154,6 +178,7 @@ public class WebSocket {
         Integer chatType = messageRequest.getChatType();
         if (PRIVATE_CHAT.equals(chatType)) {
             // 私聊
+            // log.info("消息:" + text);
             private_chat(Long.parseLong(userId), toId, text, chatType);
         } else if (TEAM_CHAT.equals(chatType)) {
             // 群聊
@@ -170,6 +195,7 @@ public class WebSocket {
             }
         } else {
             ROOMS.get(teamId).remove(userId);
+            log.info("userId：" + userId + "，断开连接");
         }
     }
 
@@ -187,15 +213,15 @@ public class WebSocket {
 
     /**
      * 发送一条消息
-     * @param userId 用户id
+     * @param userId 接收用户id
      * @param message 消息
      */
     public void sendOneMessage(String userId, String message) {
         Session wsSession = SESSION_POOL.get(userId);
         if (wsSession != null && wsSession.isOpen()) {
-            synchronized (httpSession) {
+            synchronized (userId.intern()) {
                 try {
-                    session.getBasicRemote().sendText(message);
+                    wsSession.getBasicRemote().sendText(message);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -236,12 +262,14 @@ public class WebSocket {
      */
     private void team_chat(Long userId, Long teamId, String text, Integer chatType) {
         ChatMessageVO chatMessageVO = chatService.chatResult(userId, text, chatType, new Date());
-        broadcastMessage(teamId, text);
+        text = new Gson().toJson(chatMessageVO);
+        synchronized (teamId.toString().intern()) {
+            broadcastMessage(teamId, text);
+        }
         boolean result = saveChat(userId, null, teamId, text, chatType);
         if(!result) {
-            log.error("userId=" + userId + ",teamId=" + teamId + ",发送群聊消息失败：" + text);
+            log.error("userId=" + userId + ",teamId=" + teamId + ",发送群聊消息存储失败：" + text);
         }
-
     }
 
     /**

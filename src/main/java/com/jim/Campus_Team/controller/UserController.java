@@ -33,10 +33,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -325,9 +324,51 @@ public class UserController {
         return ResultUtil.success(userVO);
     }
 
-    // @PostMapping("/avatar")
-    // public BaseResponse<OutputStream> avatar(@RequestBody UserId userId, HttpServletResponse response) {
-    //     User loginUser = userService.getLoginUser(request);
-    //
-    // }
+    /**
+     * 获取好友列表
+     * @param session 会话请求
+     * @return 用户列表
+     */
+    @RequestMapping("/friendList")
+    public BaseResponse<List<UserVO>> getFriendList(HttpSession session) {
+        User loginUser = (User) session.getAttribute(USER_LOGIN_STATE);
+        if (loginUser == null) {
+            throw new BusinessException(NOT_LOGIN);
+        }
+        List<Long> friendIdList = friendsService.lambdaQuery().select(Friends::getFriendId)
+                .eq(Friends::getFromId, loginUser.getId())
+                .list()
+                .stream().map(Friends::getFriendId).collect(Collectors.toList());
+        if (friendIdList.isEmpty()) {
+            return ResultUtil.success(Collections.emptyList());
+        }
+        return ResultUtil.success(userService.listByIds(friendIdList)
+                .stream().map(user -> BeanUtil.copyProperties(user, UserVO.class))
+                .collect(Collectors.toList()));
+    }
+
+    /**
+     * 删除好友
+     * @param session 会话
+     * @param id 好友id
+     * @return 是否删除成功
+     */
+    @RequestMapping("/removeFriend")
+    public BaseResponse<Boolean> removeFriend(HttpSession session, Long id) {
+        User loginUser = (User) session.getAttribute(USER_LOGIN_STATE);
+        if (loginUser == null) {
+            throw new BusinessException(NOT_LOGIN);
+        }
+        if (id == null || id < 1) {
+            throw new BusinessException(PARAMETER_ERROR);
+        }
+        HashMap<String, Object> hs = new HashMap<>();
+        hs.put("fromId", loginUser.getId());
+        hs.put("friendId", id);
+        boolean result = friendsService.removeByMap(hs);
+        if (!result) {
+            throw new BusinessException(NO_FRIEND);
+        }
+        return ResultUtil.success(true);
+    }
 }

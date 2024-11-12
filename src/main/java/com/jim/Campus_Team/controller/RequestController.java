@@ -29,7 +29,7 @@ import static com.jim.Campus_Team.contant.UserConstant.USER_LOGIN_STATE;
  * @date 2024-10-27 21:35
  * @description RequestController
  */
-@CrossOrigin(value = {"http://localhost:5173"}, allowCredentials = "true")
+@CrossOrigin(value = {"http://localhost:5173", "http://47.115.163.154:5173"}, allowCredentials = "true")
 @RestController
 @RequestMapping("/request")
 @Api(tags = "好友请求模块")
