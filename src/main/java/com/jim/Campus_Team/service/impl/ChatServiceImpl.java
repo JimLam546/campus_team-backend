@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.lang.Pair;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jim.Campus_Team.common.ErrorCode;
+import com.jim.Campus_Team.common.ResultUtil;
 import com.jim.Campus_Team.entity.domain.Chat;
 import com.jim.Campus_Team.entity.domain.Team;
 import com.jim.Campus_Team.entity.domain.User;
@@ -178,6 +179,9 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat>
                 .eq(UserTeam::getUserId, userId)
                 .list()
                 .stream().map(UserTeam::getTeamId).collect(Collectors.toList());
+        if (teamIdList.isEmpty()) {
+            return Collections.emptyList();
+        }
         List<Team> teamList = teamService.listByIds(teamIdList);
         ArrayList<TeamChatVO> teamChatVOList = new ArrayList<>();
         for (Team team : teamList) {
@@ -199,7 +203,6 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat>
             teamChatVOList.add(chatUserVO);
         }
         return teamChatVOList;
-
     }
 
     /**

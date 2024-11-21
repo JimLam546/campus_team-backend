@@ -8,10 +8,8 @@ import com.jim.Campus_Team.entity.request.ChatRequest;
 import com.jim.Campus_Team.entity.vo.ChatMessageVO;
 import com.jim.Campus_Team.entity.vo.PrivateChatUserVO;
 import com.jim.Campus_Team.entity.vo.TeamChatVO;
-import com.jim.Campus_Team.entity.vo.UserVO;
 import com.jim.Campus_Team.exception.BusinessException;
 import com.jim.Campus_Team.service.ChatService;
-import com.jim.Campus_Team.service.UserService;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,7 +21,6 @@ import javax.servlet.http.HttpSession;
 import java.util.List;
 
 import static com.jim.Campus_Team.contant.ChatConstant.PRIVATE_CHAT;
-import static com.jim.Campus_Team.contant.ChatConstant.TEAM_CHAT;
 import static com.jim.Campus_Team.contant.UserConstant.USER_LOGIN_STATE;
 
 /**

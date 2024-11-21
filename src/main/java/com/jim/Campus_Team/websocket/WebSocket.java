@@ -159,8 +159,9 @@ public class WebSocket {
                     SESSION_POOL.put(userId, session);
                 }
             }
-            log.info("userId：" + userId + "，建立连接");
         }
+        log.info("当前连接服务器用户：" + SESSION_POOL.size() + "人");
+        log.info("当前已建立的群聊：" + ROOMS.size() + "个");
     }
 
     @OnMessage
@@ -262,9 +263,9 @@ public class WebSocket {
      */
     private void team_chat(Long userId, Long teamId, String text, Integer chatType) {
         ChatMessageVO chatMessageVO = chatService.chatResult(userId, text, chatType, new Date());
-        text = new Gson().toJson(chatMessageVO);
+        String json = new Gson().toJson(chatMessageVO);
         synchronized (teamId.toString().intern()) {
-            broadcastMessage(teamId, text);
+            broadcastMessage(teamId, json);
         }
         boolean result = saveChat(userId, null, teamId, text, chatType);
         if(!result) {
@@ -280,6 +281,9 @@ public class WebSocket {
     private void broadcastMessage(Long teamId, String text) {
         ConcurrentHashMap<String, WebSocket> inTeamUserWebSocket = ROOMS.get(teamId.toString());
         for (WebSocket webSocket : inTeamUserWebSocket.values()) {
+            if (webSocket == this) {
+                continue;
+            }
             try {
                 webSocket.session.getBasicRemote().sendText(text);
             } catch (IOException e) {
