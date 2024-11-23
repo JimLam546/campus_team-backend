@@ -1,5 +1,6 @@
 package com.jim.Campus_Team.entity.request;
 
+import io.swagger.models.auth.In;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -11,15 +12,15 @@ public class PageRequest implements Serializable {
     /**
      * 当前页号
      */
-    private int pageNum;
+    private Integer pageNum;
 
     /**
      * 一页的数量
      */
-    private int pageSize;
+    private Integer pageSize;
 
     /**
      * 记录总量
      */
-    private int total;
+    private Integer total;
 }

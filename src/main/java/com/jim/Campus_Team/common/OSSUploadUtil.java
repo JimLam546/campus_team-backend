@@ -1,5 +1,6 @@
 package com.jim.Campus_Team.common;
 
+import cn.hutool.core.util.RandomUtil;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.internal.OSSHeaders;
@@ -21,6 +22,8 @@ import java.util.Date;
 
 public class OSSUploadUtil {
 
+    private static final String IMAGE_TYPE = "image";
+
     public static String upload(MultipartFile file, long userId, String type) {
         String fileName = null;
         try {
@@ -38,8 +41,11 @@ public class OSSUploadUtil {
 
             String bucketName = "jim-one-project";
 
-
-            fileName =  OSSUploadUtil.avatar(userId, file, type);
+            if (IMAGE_TYPE.equals(type)) {
+                fileName = OSSUploadUtil.image(userId, file, type);
+            } else {
+                fileName =  OSSUploadUtil.avatar(userId, file, type);
+            }
             //bucketName是你的ossBucket的名称，fileName是需要存储文件的名称
             PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, fileName, is);
 
@@ -59,6 +65,15 @@ public class OSSUploadUtil {
             e.printStackTrace();
         }
         return fileName;
+    }
+
+    private static String image(long postId, MultipartFile file, String type) {
+        String id = String.valueOf(postId);
+        String fileName =  id + "--" + RandomUtil.randomString(16);
+        Date date = new Date();
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM");
+        String yearMonth = format.format(date);
+        return "post/" + type + "/" + yearMonth + "/" + fileName;
     }
 
     private static String avatar(long userId, MultipartFile file, String type) {

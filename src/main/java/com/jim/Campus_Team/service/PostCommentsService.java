@@ -2,6 +2,8 @@ package com.jim.Campus_Team.service;
 
 import com.jim.Campus_Team.entity.domain.PostComments;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.jim.Campus_Team.entity.domain.User;
+import com.jim.Campus_Team.entity.request.AddCommentRequest;
 
 /**
 * @author Jim_Lam
@@ -10,4 +12,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface PostCommentsService extends IService<PostComments> {
 
+    boolean publishComment(AddCommentRequest addCommentRequest, User loginUser);
 }

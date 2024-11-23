@@ -10,6 +10,7 @@ import com.jim.Campus_Team.entity.vo.PrivateChatUserVO;
 import com.jim.Campus_Team.entity.vo.TeamChatVO;
 import com.jim.Campus_Team.exception.BusinessException;
 import com.jim.Campus_Team.service.ChatService;
+import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,6 +31,7 @@ import static com.jim.Campus_Team.contant.UserConstant.USER_LOGIN_STATE;
  */
 
 @RestController
+@Api(tags = "聊天模块")
 @RequestMapping("/chat")
 @CrossOrigin(originPatterns = {"http://localhost:5173", "http://47.115.163.154:5173"}, allowCredentials = "true")
 public class ChatController {

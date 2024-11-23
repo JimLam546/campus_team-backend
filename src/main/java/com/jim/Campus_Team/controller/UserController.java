@@ -326,12 +326,12 @@ public class UserController {
 
     /**
      * 获取好友列表
-     * @param session 会话请求
+     * @param request 会话请求
      * @return 用户列表
      */
     @RequestMapping("/friendList")
-    public BaseResponse<List<UserVO>> getFriendList(HttpSession session) {
-        User loginUser = (User) session.getAttribute(USER_LOGIN_STATE);
+    public BaseResponse<List<UserVO>> getFriendList(HttpServletRequest request) {
+        User loginUser = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
         if (loginUser == null) {
             throw new BusinessException(NOT_LOGIN);
         }
@@ -349,13 +349,13 @@ public class UserController {
 
     /**
      * 删除好友
-     * @param session 会话
+     * @param request 会话
      * @param id 好友id
      * @return 是否删除成功
      */
     @RequestMapping("/removeFriend")
-    public BaseResponse<Boolean> removeFriend(HttpSession session, Long id) {
-        User loginUser = (User) session.getAttribute(USER_LOGIN_STATE);
+    public BaseResponse<Boolean> removeFriend(HttpServletRequest request, Long id) {
+        User loginUser = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
         if (loginUser == null) {
             throw new BusinessException(NOT_LOGIN);
         }

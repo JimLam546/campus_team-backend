@@ -2,6 +2,8 @@ package com.jim.Campus_Team.service;
 
 import com.jim.Campus_Team.entity.domain.Post;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.jim.Campus_Team.entity.domain.User;
+import com.jim.Campus_Team.entity.request.AddPostRequest;
 import com.jim.Campus_Team.entity.request.PageRequest;
 import com.jim.Campus_Team.entity.vo.PostVO;
 
@@ -15,4 +17,6 @@ import java.util.List;
 public interface PostService extends IService<Post> {
 
     List<PostVO> listPostByPage(PageRequest pageRequest, Long userId);
+
+    boolean publishPost(AddPostRequest addPostRequest, User loginUser);
 }
