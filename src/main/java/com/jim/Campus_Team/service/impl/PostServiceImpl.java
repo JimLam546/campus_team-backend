@@ -26,6 +26,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -83,12 +84,18 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
                 User user = userService.getById(postComments.getUserId());
                 commentVO.setUserVO(BeanUtil.copyProperties(user, UserVO.class));
                 // 检查是否已经点赞
-                String commentKey = COMMENT_LIKED_KEY_PREFIX + postComments.getPostId();
+                String commentKey = COMMENT_LIKED_KEY_PREFIX + postComments.getId();
                 Boolean member1 = stringRedisTemplate.opsForSet().isMember(commentKey, userId.toString());
                 commentVO.setMyLiked(Boolean.TRUE.equals(member1));
                 return commentVO;
             }).collect(Collectors.toList());
             postVO.setCommentVOList(commentVOList);
+            // 将图片链接分开
+            String imageUrl = post.getImageUrl();
+            if (!StringUtils.isBlank(imageUrl)) {
+                List<String> imageList = Arrays.stream(imageUrl.split(";")).collect(Collectors.toList());
+                postVO.setImageUrl(imageList);
+            }
             return postVO;
         }).collect(Collectors.toList());
     }
@@ -107,6 +114,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
         }
         Post post = BeanUtil.copyProperties(addPostRequest, Post.class);
         post.setImageUrl(imageList);
+        post.setUserId(loginUser.getId());
         int insert = this.getBaseMapper().insert(post);
         return insert >= 1;
     }

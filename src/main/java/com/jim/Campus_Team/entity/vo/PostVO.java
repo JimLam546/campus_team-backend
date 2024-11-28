@@ -36,7 +36,7 @@ public class PostVO implements Serializable {
     /**
      * 图片url
      */
-    private String imageUrl;
+    private List<String> imageUrl;
 
     /**
      * 是否已经点赞

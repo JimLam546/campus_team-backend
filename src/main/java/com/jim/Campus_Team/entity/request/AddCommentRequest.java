@@ -15,11 +15,6 @@ public class AddCommentRequest implements Serializable {
     private static final long serialVersionUID = 5538042832625089609L;
 
     /**
-     * 评论用户 id
-     */
-    private Long userId;
-
-    /**
      * 帖子id
      */
     private Long postId;
