@@ -5,8 +5,10 @@ import com.jim.Campus_Team.entity.domain.User;
 import com.jim.Campus_Team.service.TeamService;
 import com.jim.Campus_Team.service.UserService;
 import jodd.util.collection.CompositeEnumeration;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StopWatch;
@@ -17,6 +19,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SpringBootTest
+@Slf4j
 class UserCenterApplicationTests {
 
     @Resource
@@ -99,5 +102,16 @@ class UserCenterApplicationTests {
         String port = "1234";
         String format = String.format("ip地址: %s:%s", host, port);
         System.out.println(format);
+    }
+
+    @Test
+    public void testAdd() {
+        String key = "test";
+        stringRedisTemplate.opsForValue().setIfAbsent(key, "1");
+        log.info("Redis 初始时，key = " + stringRedisTemplate.opsForValue().get(key));
+        for (int i = 0; i < 10; i++) {
+            log.info("执行用户id = " + stringRedisTemplate.opsForValue().get(key) + " 的用户计算");
+            stringRedisTemplate.opsForValue().increment(key);
+        }
     }
 }

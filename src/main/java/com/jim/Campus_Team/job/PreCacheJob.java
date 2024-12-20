@@ -41,11 +41,10 @@ public class PreCacheJob {
         // 写缓存
         System.out.println("定时任务执行......................");
         try {
-            valueOperations.set(redisKey, userPage, 24, TimeUnit.HOURS);
+            valueOperations.set(redisKey, userPage.getRecords(), 24, TimeUnit.HOURS);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
     }
-
 
 }
