@@ -7,10 +7,12 @@ import com.jim.Campus_Team.common.ResultUtil;
 import com.jim.Campus_Team.entity.domain.Team;
 import com.jim.Campus_Team.entity.domain.User;
 import com.jim.Campus_Team.entity.domain.UserTeam;
+import com.jim.Campus_Team.entity.pojo.TeamUserPOJO;
 import com.jim.Campus_Team.entity.request.*;
 import com.jim.Campus_Team.entity.vo.TeamUserVO;
 import com.jim.Campus_Team.entity.vo.UserVO;
 import com.jim.Campus_Team.exception.BusinessException;
+import com.jim.Campus_Team.mapper.TeamMapper;
 import com.jim.Campus_Team.service.TeamService;
 import com.jim.Campus_Team.service.UserService;
 import com.jim.Campus_Team.service.UserTeamService;
@@ -313,5 +315,14 @@ public class TeamController {
         }
         List<TeamUserVO> teamUserVOList = teamService.teamListByPage(teamQueryRequest, loginUser);
         return ResultUtil.success(teamUserVOList);
+    }
+
+    @Resource
+    private TeamMapper teamMapper;
+
+    @PostMapping("/test/list")
+    public BaseResponse<List<TeamUserPOJO>> getList() {
+        List<TeamUserPOJO> teamUserList = teamMapper.getTeamUserList();
+        return ResultUtil.success(teamUserList);
     }
 }

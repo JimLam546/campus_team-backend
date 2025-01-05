@@ -2,7 +2,10 @@ package com.jim.Campus_Team.mapper;
 
 import com.jim.Campus_Team.entity.domain.Team;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.jim.Campus_Team.entity.pojo.TeamUserPOJO;
 import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
 
 /**
 * @author Jim_Lam
@@ -13,7 +16,7 @@ import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
 public interface TeamMapper extends BaseMapper<Team> {
-
+    List<TeamUserPOJO> getTeamUserList();
 }
 
 

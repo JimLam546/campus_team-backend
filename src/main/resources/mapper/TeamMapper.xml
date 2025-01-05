@@ -5,24 +5,57 @@
 <mapper namespace="com.jim.Campus_Team.mapper.TeamMapper">
 
     <resultMap id="BaseResultMap" type="com.jim.Campus_Team.entity.domain.Team">
-            <id property="id" column="id" jdbcType="BIGINT"/>
-            <result property="teamName" column="teamName" jdbcType="VARCHAR"/>
-            <result property="description" column="description" jdbcType="VARCHAR"/>
-            <result property="maxNum" column="maxNum" jdbcType="INTEGER"/>
-            <result property="expireTime" column="expireTime" jdbcType="TIMESTAMP"/>
-            <result property="userId" column="userId" jdbcType="BIGINT"/>
-            <result property="teamPassword" column="teamPassword" jdbcType="VARCHAR"/>
-            <result property="teamStatus" column="teamStatus" jdbcType="INTEGER"/>
-            <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
-            <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
-            <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
-            <result property="avatarUrl" column="avatarUrl" jdbcType="VARCHAR"/>
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="teamName" column="teamName" jdbcType="VARCHAR"/>
+        <result property="description" column="description" jdbcType="VARCHAR"/>
+        <result property="maxNum" column="maxNum" jdbcType="INTEGER"/>
+        <result property="expireTime" column="expireTime" jdbcType="TIMESTAMP"/>
+        <result property="userId" column="userId" jdbcType="BIGINT"/>
+        <result property="teamPassword" column="teamPassword" jdbcType="VARCHAR"/>
+        <result property="teamStatus" column="teamStatus" jdbcType="INTEGER"/>
+        <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
+        <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
+        <result property="avatarUrl" column="avatarUrl" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,teamName,description,
+        id
+        ,teamName,description,
         maxNum,expireTime,userId,teamId
         teamPassword,teamStatus,createTime,
-        updateTime,isDelete,avatarUrl
+        updateTime,avatarUrl
     </sql>
+
+    <resultMap id="teamUserMap" type="com.jim.Campus_Team.entity.pojo.TeamUserPOJO">
+        <id property="id" column="team_id"/>
+        <result property="teamName" column="team_teamName"/>
+        <result property="description" column="team_description"/>
+        <result property="userId" column="team_userId"/>
+        <result property="createTime" column="team_createTime"/>
+        <result property="expireTime" column="team_expireTime"/>
+        <result property="maxNum" column="team_maxNum"/>
+        <result property="teamStatus" column="team_teamStatus"/>
+        <result property="avatarUrl" column="team_avatarUrl"/>
+        <collection property="userIdList" ofType="long">
+            <id column="ut_id"/>
+        </collection>
+    </resultMap>
+
+    <!--队伍信息（包含队伍内的用户信息）-->
+    <select id="getTeamUserList" resultMap="teamUserMap">
+        SELECT t.id          AS team_id,
+               t.teamName    AS team_teamName,
+               t.description AS team_description,
+               t.userId      AS team_userId,
+               t.createTime  AS team_createTime,
+               t.expireTime  AS team_expireTime,
+               t.maxNum      AS team_maxNum,
+               t.teamStatus  AS team_teamStatus,
+               t.avatarUrl   AS team_avatarUrl,
+               ut.id         AS ut_id
+        FROM team t
+                 INNER JOIN user_team ut
+        ON t.id = ut.teamId
+    </select>
 </mapper>
