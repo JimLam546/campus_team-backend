@@ -1,6 +1,8 @@
 package com.jim.Campus_Team.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jim.Campus_Team.entity.domain.Team;
 import com.jim.Campus_Team.entity.domain.User;
@@ -14,6 +16,8 @@ import com.jim.Campus_Team.mapper.TeamMapper;
 import com.jim.Campus_Team.service.TeamService;
 import com.jim.Campus_Team.service.UserService;
 import com.jim.Campus_Team.service.UserTeamService;
+import com.sun.org.apache.bcel.internal.generic.NEW;
+import com.sun.org.apache.bcel.internal.generic.RETURN;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -26,6 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.jim.Campus_Team.common.ErrorCode.*;
 
@@ -326,10 +331,48 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
     @Transactional(rollbackFor = Exception.class)
     public String uploadAvatar(MultipartFile file, User loginUser, long teamId) {
         Team team = getTeamById(teamId);
-        if(!loginUser.getId().equals(team.getUserId())) {
+        if (!loginUser.getId().equals(team.getUserId())) {
             throw new BusinessException(NO_AUTO);
         }
         return userService.uploadAvatar(file, loginUser, "teamAvatar");
+    }
+
+    @Override
+    public List<TeamUserVO> teamListByPage(TeamQueryRequest teamQueryRequest, User loginUser) {
+        int pageNum = teamQueryRequest.getPageNum();
+        Integer pageSize = teamQueryRequest.getPageSize();
+        QueryWrapper<Team> teamQueryWrapper = this.getTeamQueryWrapper(teamQueryRequest);
+        // 获取符合条件的队伍
+        List<Team> teamList = this.list(teamQueryWrapper);
+
+        List<TeamUserVO> teamUserVOList = teamList.stream().map(team -> {
+            TeamUserVO teamUserVO = BeanUtil.copyProperties(team, TeamUserVO.class);
+            teamUserVO.setCreateUser(BeanUtil.copyProperties(userService.getById(teamUserVO.getUserId()), UserVO.class));
+            return teamUserVO;
+        }
+        ).collect(Collectors.toList());
+        // 符合搜索条件的 teamUserVOList
+        List<TeamUserVO> filterTeamUserVOList = teamUserVOList.stream().filter(teamUserVO -> {
+            // 获取每个队伍的成员信息
+            List<UserVO> userVOList = userTeamService.lambdaQuery().eq(UserTeam::getTeamId, teamUserVO.getId()).list()
+                    .stream()
+                    .map(userTeam -> BeanUtil.copyProperties(userService.getById(userTeam.getUserId()), UserVO.class)).collect(Collectors.toList());
+            // 将成员信息 set 到 VO 中
+            teamUserVO.setTeamUserList(userVOList);
+            // 判断搜索条件的成员是否存在，不存在则排除
+            return teamUserVO.getTeamUserList().stream().map(UserVO::getId).collect(Collectors.toSet()).contains(teamQueryRequest.getUserId());
+        }).collect(Collectors.toList());
+        return teamUserVOList;
+    }
+
+    @Override
+    public QueryWrapper<Team> getTeamQueryWrapper(TeamQueryRequest teamQueryRequest) {
+        QueryWrapper<Team> teamQueryWrapper = new QueryWrapper<>();
+        teamQueryWrapper.eq(teamQueryRequest.getUserId() != null, "userId", teamQueryRequest.getUserId());
+        teamQueryWrapper.eq(teamQueryRequest.getTeamStatus() != null, "teamStatus", teamQueryRequest.getTeamStatus());
+        teamQueryWrapper.like(teamQueryRequest.getTeamName() != null, "teamName", teamQueryRequest.getTeamName());
+        teamQueryWrapper.like(teamQueryRequest.getDescription() != null, "description", teamQueryRequest.getDescription());
+        return teamQueryWrapper;
     }
 
 

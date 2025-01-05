@@ -4,7 +4,6 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jim.Campus_Team.common.BaseResponse;
 import com.jim.Campus_Team.common.ErrorCode;
@@ -12,10 +11,7 @@ import com.jim.Campus_Team.common.ResultUtil;
 import com.jim.Campus_Team.entity.domain.Friends;
 import com.jim.Campus_Team.entity.domain.User;
 import com.jim.Campus_Team.entity.domain.UserId;
-import com.jim.Campus_Team.entity.request.PageRequest;
-import com.jim.Campus_Team.entity.request.UpdateTagRequest;
-import com.jim.Campus_Team.entity.request.UserLoginRequest;
-import com.jim.Campus_Team.entity.request.UserRegisterRequest;
+import com.jim.Campus_Team.entity.request.*;
 import com.jim.Campus_Team.entity.vo.UserVO;
 import com.jim.Campus_Team.exception.BusinessException;
 import com.jim.Campus_Team.service.FriendsService;
@@ -33,7 +29,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -150,8 +145,8 @@ public class UserController {
     // }
 
     // 分页查询
-    @GetMapping("/pageList")
-    public BaseResponse<List<User>> list(PageRequest pageRequest, HttpServletRequest request) {
+    @PostMapping("/pageList")
+    public BaseResponse<Page<User>> list(@RequestBody PageRequest pageRequest, HttpServletRequest request) {
         // 管理员才能查看用户信息
         if (pageRequest.getPageNum() <= 0 || pageRequest.getPageSize() <= 0)
             return ResultUtil.error(ErrorCode.PARAMETER_ERROR);
@@ -170,8 +165,7 @@ public class UserController {
         for (User u : records) {
             u.setCreateTimeStr(dateFormat.format(u.getCreateTime()));
         }
-        List<User> userList = page.getRecords();
-        return ResultUtil.success(userList);
+        return ResultUtil.success(page);
     }
 
     // 修改个人信息(用户中心)
@@ -370,5 +364,34 @@ public class UserController {
             throw new BusinessException(NO_FRIEND);
         }
         return ResultUtil.success(true);
+    }
+
+    /**
+     * 用户用户列信息（未脱敏）
+     * @param userQueryRequest
+     * @return
+     */
+    @PostMapping("/list/page")
+    public BaseResponse<Page<UserVO>> userListByPage(@RequestBody UserQueryRequest userQueryRequest, HttpServletRequest request) {
+        Object attribute = request.getSession().getAttribute(USER_LOGIN_STATE);
+        if (attribute == null) {
+            throw new BusinessException(NOT_LOGIN);
+        }
+        if (userQueryRequest == null) {
+            throw new BusinessException(PARAMETER_ERROR);
+        }
+        int current = userQueryRequest.getPageNum();
+        int pageSize = userQueryRequest.getPageSize();
+        QueryWrapper<User> queryWrapper = userService.getQueryWrapper(userQueryRequest);
+        Page<User> page = userService
+                .page(new Page<>(current, pageSize)
+                        , queryWrapper);
+        Page<UserVO> userVOPage = new Page<>();
+        userVOPage.setCurrent(current);
+        userVOPage.setSize(pageSize);
+        List<UserVO> userVOList = userService.getUserVOList(page.getRecords());
+        BeanUtil.copyProperties(page, userVOPage);
+        userVOPage.setRecords(userVOList);
+        return ResultUtil.success(userVOPage);
     }
 }

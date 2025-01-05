@@ -33,7 +33,7 @@ public class TeamQueryRequest extends PageRequest{
     private Integer maxNum;
 
     /**
-     * 队伍创建人
+     * 队伍创建人id
      */
     private Long userId;
 
@@ -41,4 +41,9 @@ public class TeamQueryRequest extends PageRequest{
      * 队伍状态(0-公开，1-加密，2-private，3-过期)
      */
     private Integer teamStatus;
+
+    /**
+     * 队伍成员id
+     */
+    private Long memberId;
 }

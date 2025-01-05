@@ -55,6 +55,9 @@ public class PostController {
     @Resource
     private StringRedisTemplate stringRedisTemplate;
 
+    @Resource
+    private OSSUploadUtil ossUploadUtil;
+
     /**
      * 根据发布时间获取帖子
      * @param pageRequest 分页参数
@@ -160,7 +163,6 @@ public class PostController {
      * 帖子图片上传
      * @param request 会话请求
      * @param file 图片文件
-     * @param postId 帖子id
      * @return 图片链接
      */
     @PostMapping("/postImage/upload")
@@ -172,7 +174,7 @@ public class PostController {
         if (file == null || file.isEmpty()) {
             throw new BusinessException(ErrorCode.PARAMETER_ERROR, "图片没有上传");
         }
-        String image = OSSUploadUtil.upload(file, loginUser.getId(), "image");
+        String image = ossUploadUtil.upload(file, loginUser.getId(), "image");
         return ResultUtil.success(image);
     }
 

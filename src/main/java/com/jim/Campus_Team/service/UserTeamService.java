@@ -1,7 +1,9 @@
 package com.jim.Campus_Team.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jim.Campus_Team.entity.domain.UserTeam;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.jim.Campus_Team.entity.request.TeamQueryRequest;
 
 /**
 * @author Jim_Lam
@@ -9,5 +11,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
 * @createDate 2024-05-03 22:59:59
 */
 public interface UserTeamService extends IService<UserTeam> {
-
+    QueryWrapper<UserTeam> getUserTeamQueryWrapper(TeamQueryRequest teamQueryRequest);
 }

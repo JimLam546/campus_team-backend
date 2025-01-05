@@ -10,11 +10,9 @@ import com.jim.Campus_Team.entity.vo.PrivateChatUserVO;
 import com.jim.Campus_Team.entity.vo.TeamChatVO;
 import com.jim.Campus_Team.exception.BusinessException;
 import com.jim.Campus_Team.service.ChatService;
+import com.jim.Campus_Team.service.UserService;
 import io.swagger.annotations.Api;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -39,12 +37,16 @@ public class ChatController {
     @Resource
     private ChatService chatService;
 
+    @Resource
+    private UserService userService;
+
     /**
      * 获取所有私聊过的用户
+     *
      * @param request 会话请求
      * @return 用户列表
      */
-    @RequestMapping("/privateChatList")
+    @GetMapping("/privateChatList")
     public BaseResponse<List<PrivateChatUserVO>> getPrivateChatList(HttpServletRequest request) {
         User loginUser = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
         if (loginUser == null) {
@@ -56,18 +58,19 @@ public class ChatController {
 
     /**
      * 获取私聊记录
+     *
      * @param chatRequest 聊天请求
-     * @param request 会话
+     * @param request     会话
      * @return 用户消息VO
      */
-    @RequestMapping("/privateChat")
+    @PostMapping("/privateChat")
     public BaseResponse<List<ChatMessageVO>> getPrivateChat(@RequestBody ChatRequest chatRequest,
-                                                           HttpServletRequest request) {
+                                                            HttpServletRequest request) {
         if (chatRequest == null) {
             throw new BusinessException(ErrorCode.PARAMETER_ERROR);
         }
         User loginUser = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
-        if(loginUser == null) {
+        if (loginUser == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN);
         }
         List<ChatMessageVO> privateChatList = chatService.getPrivateChat(chatRequest, PRIVATE_CHAT, loginUser);
@@ -76,12 +79,13 @@ public class ChatController {
 
     /**
      * 获取自己有消息的群聊列表
+     *
      * @param session 会话
      * @return 群聊列表
      */
-    @RequestMapping("/teamChatList")
-    public BaseResponse<List<TeamChatVO>> getTeamChatList(HttpSession session) {
-        User loginUser = (User) session.getAttribute(USER_LOGIN_STATE);
+    @GetMapping("/teamChatList")
+    public BaseResponse<List<TeamChatVO>> getTeamChatList(HttpServletRequest request) {
+        User loginUser = userService.getLoginUser(request);
         if (loginUser == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN);
         }
@@ -90,17 +94,17 @@ public class ChatController {
 
     /**
      * 获取历史群聊记录
-     * @param session 会话
+     *
+     * @param session     会话
      * @param chatRequest 聊天请求
      * @return 历史记录
      */
-    @RequestMapping("/teamChat")
-    public BaseResponse<List<ChatMessageVO>> getTeamChat(HttpSession session,
-                                                         @RequestBody ChatRequest chatRequest) {
+    @PostMapping("/teamChat")
+    public BaseResponse<List<ChatMessageVO>> getTeamChat(@RequestBody ChatRequest chatRequest, HttpServletRequest request) {
         if (chatRequest == null) {
             throw new BusinessException(ErrorCode.PARAMETER_ERROR);
         }
-        User loginUser = (User) session.getAttribute(USER_LOGIN_STATE);
+        User loginUser = userService.getLoginUser(request);
         if (loginUser == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN);
         }

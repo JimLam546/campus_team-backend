@@ -3,6 +3,7 @@ package com.jim.Campus_Team.exception;
 import com.jim.Campus_Team.common.ErrorCode;
 
 public class BusinessException extends RuntimeException{
+    private static final long serialVersionUID = 8457103549108688632L;
     private final int code;
     private final String description;
     public BusinessException(ErrorCode errorCode) {

@@ -14,4 +14,8 @@ public interface ChatConstant {
      * 群聊
      */
     Integer TEAM_CHAT = 2;
+    /**
+     * 系统消息
+     */
+    Integer SYSTEM_CHAT = 3;
 }

@@ -1,9 +1,11 @@
 package com.jim.Campus_Team.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.jim.Campus_Team.common.BaseResponse;
 import com.jim.Campus_Team.entity.domain.User;
 import com.jim.Campus_Team.entity.request.UpdateTagRequest;
+import com.jim.Campus_Team.entity.request.UserQueryRequest;
 import com.jim.Campus_Team.entity.vo.UserVO;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,6 +34,9 @@ public interface UserService extends IService<User> {
     List<UserVO> recommendUsers(int num, User loginUser);
 
     boolean modifyTags(UpdateTagRequest tagList, User loginUser);
+    QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest);
 
     String uploadAvatar(MultipartFile file, User loginUser, String avatarType);
+
+    List<UserVO> getUserVOList(List<User> records);
 }

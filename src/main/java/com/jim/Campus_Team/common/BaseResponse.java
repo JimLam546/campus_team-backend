@@ -29,11 +29,15 @@ public class BaseResponse<T> {
     }
 
     public BaseResponse(ErrorCode errorCode) {
-        this(errorCode.getCode(), errorCode.getMessage(), null, errorCode.getDescription());
+        this.code = errorCode.getCode();
+        this.message = errorCode.getMessage();
+        this.description = errorCode.getDescription();
     }
 
     public BaseResponse(ErrorCode errorCode, String description) {
-        this(errorCode.getCode(), errorCode.getMessage(), null, description);
+        this.code = errorCode.getCode();
+        this.message = errorCode.getMessage();
+        this.description = description;
     }
 
     public BaseResponse(int code, String message, String description) {

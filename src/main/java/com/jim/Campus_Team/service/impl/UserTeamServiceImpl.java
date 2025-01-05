@@ -1,7 +1,9 @@
 package com.jim.Campus_Team.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jim.Campus_Team.entity.domain.UserTeam;
+import com.jim.Campus_Team.entity.request.TeamQueryRequest;
 import com.jim.Campus_Team.service.UserTeamService;
 import com.jim.Campus_Team.mapper.UserTeamMapper;
 import org.springframework.stereotype.Service;
@@ -15,6 +17,12 @@ import org.springframework.stereotype.Service;
 public class UserTeamServiceImpl extends ServiceImpl<UserTeamMapper, UserTeam>
     implements UserTeamService{
 
+    @Override
+    @Deprecated
+    public QueryWrapper<UserTeam> getUserTeamQueryWrapper(TeamQueryRequest teamQueryRequest) {
+        QueryWrapper<UserTeam> userTeamQueryWrapper = new QueryWrapper<>();
+        return null;
+    }
 }
 
 

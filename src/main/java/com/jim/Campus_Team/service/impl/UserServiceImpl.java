@@ -1,6 +1,8 @@
 package com.jim.Campus_Team.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -13,6 +15,7 @@ import com.jim.Campus_Team.common.OSSUploadUtil;
 import com.jim.Campus_Team.common.ResultUtil;
 import com.jim.Campus_Team.entity.domain.User;
 import com.jim.Campus_Team.entity.request.UpdateTagRequest;
+import com.jim.Campus_Team.entity.request.UserQueryRequest;
 import com.jim.Campus_Team.entity.vo.UserVO;
 import com.jim.Campus_Team.exception.BusinessException;
 import com.jim.Campus_Team.mapper.UserMapper;
@@ -53,6 +56,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Resource
     private UserMapper userMapper;
+
+    @Resource
+    private OSSUploadUtil ossUploadUtil;
+
     //    加密盐
     private static final String SALT = "hello";
 
@@ -281,6 +288,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return true;
     }
 
+    @Override
+    public QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest) {
+        if (userQueryRequest == null) {
+            throw new BusinessException(PARAMETER_ERROR);
+        }
+        QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
+        Long id = userQueryRequest.getId();
+        String username = userQueryRequest.getUsername();
+        String userAccount = userQueryRequest.getUserAccount();
+        String phone = userQueryRequest.getPhone();
+        String userRole = userQueryRequest.getUserRole();
+        userQueryWrapper.eq(id != null && id > 0, "id", id);
+        userQueryWrapper.like(StrUtil.isNotBlank(username), "username", username);
+        userQueryWrapper.like(StrUtil.isNotBlank(userAccount), "userAccount", userAccount);
+        // 没有设置性别
+        userQueryWrapper.eq(StrUtil.isNotBlank(phone), "phone", phone);
+        userQueryWrapper.eq(StrUtil.isNotBlank(userRole), "userRole", phone);
+        return userQueryWrapper;
+    }
+
     /**
      * 用户头像上传
      *
@@ -303,8 +330,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
 
         // 第三个参数表示上传的图片是队伍的还是用户的
-        return OSSUploadUtil.upload(avatar, loginUser.getId(), avatarType);
+        return ossUploadUtil.upload(avatar, loginUser.getId(), avatarType);
 
+    }
+
+    @Override
+    public List<UserVO> getUserVOList(List<User> userList) {
+        if (CollectionUtil.isEmpty(userList)) {
+            return Collections.emptyList();
+        }
+        return userList.stream()
+                .map(user -> BeanUtil.copyProperties(user, UserVO.class))
+                .collect(Collectors.toList());
     }
 
     // 上传本地

@@ -12,9 +12,10 @@ public class TeamUserVO implements Serializable {
 
 
     /**
-     * 关联表记录id
+     * 关联表记录id(当队伍id用)
      */
     private Long id;
+
 
     /**
      * 队伍名称

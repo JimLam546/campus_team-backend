@@ -8,6 +8,9 @@ import com.aliyun.oss.model.CannedAccessControlList;
 import com.aliyun.oss.model.ObjectMetadata;
 import com.aliyun.oss.model.PutObjectRequest;
 import com.aliyun.oss.model.StorageClass;
+import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -20,11 +23,18 @@ import java.util.Date;
  * 日期: 2024-05-29 22:59
  */
 
+@Component
+@ConfigurationProperties(prefix = "oss")
+@Data
 public class OSSUploadUtil {
 
-    private static final String IMAGE_TYPE = "image";
+    private String accessKeyId;
 
-    public static String upload(MultipartFile file, long userId, String type) {
+    private String accessKeySecret;
+
+    private final String IMAGE_TYPE = "image";
+
+    public String upload(MultipartFile file, long userId, String type) {
         String fileName = null;
         try {
             InputStream is = file.getInputStream();
@@ -32,8 +42,6 @@ public class OSSUploadUtil {
             String endpoint = "oss-cn-shenzhen.aliyuncs.com";
             // 阿里云主账号AccessKey拥有所有API的访问权限，风险很高。强烈建议您创建并使用RAM账号进行API访问或日常运维，
             // 请登录 https://ram.console.aliyun.com 创建RAM账号。
-            String accessKeyId = "LTAI5t8fbTFmiPmB1QNf3u1G";
-            String accessKeySecret = "GwW47S1E8s21K1GJuVhOszW7qvHfIW";
 
             // 创建OSSClient实例。
             OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
@@ -42,11 +50,11 @@ public class OSSUploadUtil {
             String bucketName = "jim-one-project";
 
             if (IMAGE_TYPE.equals(type)) {
-                fileName = OSSUploadUtil.image(userId, file, type);
+                fileName = image(userId, file, type);
             } else {
-                fileName =  OSSUploadUtil.avatar(userId, file, type);
+                fileName =  avatar(userId, file, type);
             }
-            //bucketName是你的ossBucket的名称，fileName是需要存储文件的名称
+            //bucketName 是你的 ossBucket 的名称，fileName 是需要存储文件的名称
             PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, fileName, is);
 
             fileName = "https://" + bucketName + "." + endpoint + "/" + fileName;
@@ -67,8 +75,8 @@ public class OSSUploadUtil {
         return fileName;
     }
 
-    private static String image(long postId, MultipartFile file, String type) {
-        String id = String.valueOf(postId);
+    private String image(long postId, MultipartFile file, String type) {
+        String id = java.lang.String.valueOf(postId);
         String fileName =  id + "--" + RandomUtil.randomString(16);
         Date date = new Date();
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM");
@@ -76,8 +84,8 @@ public class OSSUploadUtil {
         return "post/" + type + "/" + yearMonth + "/" + fileName;
     }
 
-    private static String avatar(long userId, MultipartFile file, String type) {
-        String id = String.valueOf(userId);
+    private String avatar(long userId, MultipartFile file, String type) {
+        String id = java.lang.String.valueOf(userId);
         String fileName =  id + "--" + "--" + file.getOriginalFilename();
         Date date = new Date();
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM");

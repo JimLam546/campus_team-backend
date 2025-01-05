@@ -1,5 +1,6 @@
 package com.jim.Campus_Team.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.jim.Campus_Team.entity.domain.Team;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.jim.Campus_Team.entity.domain.User;
@@ -29,4 +30,8 @@ public interface TeamService extends IService<Team> {
     boolean deleteTeam(long teamId, User loginUser);
 
     String uploadAvatar(MultipartFile file, User loginUser, long teamId);
+
+    List<TeamUserVO> teamListByPage(TeamQueryRequest teamQueryRequest, User loginUser);
+
+    QueryWrapper getTeamQueryWrapper(TeamQueryRequest teamQueryRequest);
 }

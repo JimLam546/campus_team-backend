@@ -27,9 +27,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.jim.Campus_Team.contant.ChatConstant.PRIVATE_CHAT;
-import static com.jim.Campus_Team.contant.ChatConstant.TEAM_CHAT;
-import static com.jim.Campus_Team.contant.UserConstant.USER_LOGIN_STATE;
+import static com.jim.Campus_Team.contant.ChatConstant.*;
+import static com.jim.Campus_Team.contant.UserConstant.*;
 
 /**
  * @author Jim_Lam
@@ -112,16 +111,22 @@ public class WebSocket {
         this.httpSession = httpSession;
         // 群聊
         if (!"NaN".equals(teamId)) {
-            // 验证用户在不在队伍内
-            UserTeam one = userTeamService.lambdaQuery()
-                    .select(UserTeam::getUserId)
-                    .eq(UserTeam::getTeamId, Long.parseLong(teamId))
-                    .eq(UserTeam::getUserId, Long.parseLong(userId))
-                    .one();
-            // 用户不在队伍内
-            if (one == null) {
-                sendError(userId, "你不是该队伍的成员");
-                return;
+            // 用户用户信息，看是不是管理员
+            User user = userService.lambdaQuery().eq(User::getId, userId).one();
+            if (user == null) return;
+            // 如果是用户角色则判断在不在队伍内
+            if (user.getUserRole().equals(USER_ROLE)) {
+                // 验证用户在不在队伍内
+                UserTeam one = userTeamService.lambdaQuery()
+                        .select(UserTeam::getUserId)
+                        .eq(UserTeam::getTeamId, Long.parseLong(teamId))
+                        .eq(UserTeam::getUserId, Long.parseLong(userId))
+                        .one();
+                // 用户不在队伍内
+                if (one == null) {
+                    sendError(userId, "你不是该队伍的成员");
+                    return;
+                }
             }
             // 查看群聊是否已经创建，没有则创建（双重验证）
             if (!ROOMS.containsKey(teamId)) {
@@ -164,6 +169,11 @@ public class WebSocket {
         log.info("当前已建立的群聊：" + ROOMS.size() + "个");
     }
 
+    /**
+     *
+     * @param message
+     * @param userId 请求连接的用户 id
+     */
     @OnMessage
     public void onMessage(String message, @PathParam("userId") String userId) {
         // 保持心跳
@@ -183,6 +193,9 @@ public class WebSocket {
             private_chat(Long.parseLong(userId), toId, text, chatType);
         } else if (TEAM_CHAT.equals(chatType)) {
             // 群聊
+            team_chat(Long.parseLong(userId), teamId, text, chatType);
+        } else if (SYSTEM_CHAT.equals(chatType)) {
+            // 管理员发消息
             team_chat(Long.parseLong(userId), teamId, text, chatType);
         }
     }

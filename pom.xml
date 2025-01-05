@@ -80,6 +80,12 @@
             <artifactId>commons-lang3</artifactId>
         </dependency>
 
+        <!-- aop切面 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+
         <!--redis-->
         <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-redis -->
         <dependency>

@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 
 import static com.jim.Campus_Team.contant.ChatConstant.PRIVATE_CHAT;
 import static com.jim.Campus_Team.contant.ChatConstant.TEAM_CHAT;
+import static com.jim.Campus_Team.contant.UserConstant.USER_ROLE;
 
 /**
  * @author Jim_Lam
@@ -216,6 +217,11 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, Chat>
         Long userId = loginUser.getId();
         if (teamId == null || teamId < 1) {
             throw new BusinessException(ErrorCode.PARAMETER_ERROR);
+        }
+        // 判断用户是不是在队伍内
+        UserTeam one = userTeamService.lambdaQuery().eq(UserTeam::getTeamId, teamId).eq(UserTeam::getUserId, loginUser.getId()).one();
+        if (loginUser.getUserRole().equals(USER_ROLE) && one == null) {
+            throw new BusinessException(ErrorCode.NO_AUTO);
         }
         List<Chat> chatList = lambdaQuery().eq(Chat::getTeamId, teamId).list();
         return chatList.stream().map(chat -> {

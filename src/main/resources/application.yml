@@ -1,23 +1,14 @@
 server:
   port: 8080
 spring:
-  datasource:
-#    url: jdbc:mysql://47.115.163.154:3306/campus_team?useSSL=true&serverTimezone=Asia/Shanghai
-    url: jdbc:mysql://localhost:3306/partner_match?useSSL=true&serverTimezone=GMT%2B8
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-#    password: LINjun2002605.
-    password: 123456
-  redis:
-    host: 47.115.163.154
-    port: 6379
-    password: 123456
   session:
     timeout: 3600 # session 过期时间（秒）
     store-type: redis
   servlet:
     multipart:
       max-file-size: 10MB
+  profiles:
+    active: local
 mybatis-plus:
   mapper-locations: classpath:mapper/**/*.xml
   configuration:
@@ -32,18 +23,5 @@ mybatis-plus:
       logic-delete-field: isDelete # 全局逻辑删除的实体字段名
       logic-delete-value: 1 # 逻辑已删除值(默认为 1)
       logic-not-delete-value: 0 # 逻辑未删除值(默认为 0)
-knife4j:
-  enable: true
-  openapi:
-    title: 校园同行平台接口文档
-    description: 接口文档
-    email: chen@foxmail.com
-    concat: 123
-    url: https://docs.xiaominfo.com
-    version: v4.0
-    license: Apache 2.0
-    license-url: https://stackoverflow.com/
-    terms-of-service-url: https://stackoverflow.com/
+
 AvatarPath: userAvatar\
-RedisKey:
-  temp_Id: 1

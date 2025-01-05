@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.jim.Campus_Team.common.ErrorCode.*;
+import static com.jim.Campus_Team.contant.UserConstant.ADMIN_ROLE;
 import static com.jim.Campus_Team.contant.UserConstant.USER_LOGIN_STATE;
 
 @RestController
@@ -293,5 +294,24 @@ public class TeamController {
         if(!result)
             throw new BusinessException(SYSTEM_ERROR);
         return ResultUtil.success(true);
+    }
+
+    /**
+     * 管理员才能调用
+     * @param teamQueryRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/list/page")
+    public BaseResponse<List<TeamUserVO>> teamListByPage(@RequestBody TeamQueryRequest teamQueryRequest, HttpServletRequest request) {
+        User loginUser = userService.getLoginUser(request);
+        if (teamQueryRequest == null) {
+            throw new BusinessException(PARAMETER_ERROR);
+        }
+        if (!loginUser.getUserRole().equals(ADMIN_ROLE)) {
+            throw new BusinessException(NO_AUTO);
+        }
+        List<TeamUserVO> teamUserVOList = teamService.teamListByPage(teamQueryRequest, loginUser);
+        return ResultUtil.success(teamUserVOList);
     }
 }
